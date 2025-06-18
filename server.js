@@ -18,7 +18,7 @@ const parteRepuestoRoutes = require('./routes/parteRepuestoRoutes');
 const movimientoInventarioRoutes = require('./routes/movimientoInventarioRoutes');
 const registroActividadRoutes = require('./routes/registroActividadRoutes'); // Asegúrate de que este archivo exista
 const reportesRoutes = require('./routes/reportesRoutes'); // Aunque no lo estamos "generando" aún, la importación puede ir
-const configuracionRoutes = require('./routes/configuracionRoutes');
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -60,7 +60,7 @@ app.use('/api/partes-repuestos', parteRepuestoRoutes); // Ruta para Partes/Repue
 app.use('/api/movimientos-inventario', movimientoInventarioRoutes); // Ruta para Movimientos de Inventario
 app.use('/api/registros-actividad', registroActividadRoutes); // Ruta para Registros de Actividad
 app.use('/api/reportes', reportesRoutes); // Ruta para Reportes
-app.use('/api/configuraciones', configuracionRoutes); // <-- AÑADIR ESTA LÍNEA
+
 
 // --- Middleware de Manejo de Errores Centralizado (Buena Práctica) ---
 // Este middleware captura errores que no fueron manejados por rutas o otros middlewares
@@ -84,7 +84,7 @@ async function startServer() {
         // 1. Modelos sin dependencias o con dependencias que no tienen FK a otros modelos
         await db.Proveedor.sync({ alter: true });
         await db.Usuario.sync({ alter: true });
-        await db.Configuracion.sync({ alter: true }); // <-- AÑADE ESTA LÍNEA
+       
 
         // 2. Modelos que dependen de los anteriores
         await db.ParteRepuesto.sync({ alter: true }); // Depende de Proveedor
