@@ -1,45 +1,52 @@
 // models/movimientoInventario.js
-module.exports = (sequelize, DataTypes) => { // <-- ¡IMPORTANTE! Envuelve la definición en una función
+module.exports = (sequelize, DataTypes) => {
     const MovimientoInventario = sequelize.define('MovimientoInventario', {
         id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-        parte_repuesto_id: { // Clave foránea a la tabla de PartesRepuestos
+        parte_repuesto_id: {
             type: DataTypes.INTEGER,
             allowNull: false,
-            references: {
-                model: 'partes_repuestos', // ¡IMPORTANTE! Nombre del modelo en plural (cómo lo infiere Sequelize por defecto)
-                key: 'id'
-            }
+            references: { model: 'partes_repuestos', key: 'id' }
         },
-        usuario_id: { // Clave foránea a la tabla de Usuarios
+        usuario_id: {
             type: DataTypes.INTEGER,
             allowNull: false,
-            references: {
-                model: 'usuarios', // ¡IMPORTANTE! Nombre del modelo en plural (cómo lo infiere Sequelize por defecto)
-                key: 'id'
-            }
+            references: { model: 'usuarios', key: 'id' }
         },
-        tipo_movimiento: { // 'entrada' o 'salida'
-            type: DataTypes.ENUM('entrada', 'salida'), // Define un tipo ENUM para valores específicos
+        tipo_movimiento: {
+            // --- CAMPO ACTUALIZADO ---
+            // Añadimos los nuevos tipos de movimiento para ser más completos.
+            type: DataTypes.ENUM('entrada', 'salida', 'ajuste', 'transferencia'),
             allowNull: false
         },
-        cantidad_movimiento: { // Cantidad de unidades que se movieron en este registro
+        cantidad_movimiento: {
             type: DataTypes.INTEGER,
-            allowNull: false,
-            validate: { min: 1 } // Debe ser al menos 1
+            allowNull: false
+            // Quitamos la validación de min: 1 para permitir ajustes negativos.
         },
-        descripcion_movimiento: { // Notas o detalles adicionales sobre el movimiento
+        descripcion_movimiento: {
             type: DataTypes.TEXT,
             allowNull: true
         },
-        fecha_movimiento: { // Fecha y hora específica del movimiento
+        // --- NUEVOS CAMPOS PARA TRANSFERENCIAS ---
+        ubicacion_origen: {
+            type: DataTypes.STRING(100),
+            allowNull: true,
+            comment: 'Ubicación de origen para movimientos de transferencia'
+        },
+        ubicacion_destino: {
+            type: DataTypes.STRING(100),
+            allowNull: true,
+            comment: 'Ubicación de destino para movimientos de transferencia'
+        },
+        fecha_movimiento: {
             type: DataTypes.DATE,
             allowNull: false,
             defaultValue: DataTypes.NOW
         }
     }, {
-        tableName: 'movimientos_inventario', // Nombre de la tabla en la DB
-        timestamps: false // No usamos createdAt/updatedAt automáticos, tenemos fecha_movimiento
+        tableName: 'movimientos_inventario',
+        timestamps: false
     });
 
-    return MovimientoInventario; // <-- ¡IMPORTANTE! Retorna el modelo desde la función
+    return MovimientoInventario;
 };

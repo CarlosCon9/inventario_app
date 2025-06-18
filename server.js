@@ -57,7 +57,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/usuarios', userRoutes);
 app.use('/api/proveedores', proveedorRoutes);
 app.use('/api/partes-repuestos', parteRepuestoRoutes); // Ruta para Partes/Repuestos
-app.use('/api/movimientos-inventario', movimientoInventarioRoutes); // Ruta para Movimientos de Inventario
+app.use('/api/movimientos', movimientoInventarioRoutes);
 app.use('/api/registros-actividad', registroActividadRoutes); // Ruta para Registros de Actividad
 app.use('/api/reportes', reportesRoutes); // Ruta para Reportes
 
