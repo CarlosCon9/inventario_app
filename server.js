@@ -27,6 +27,12 @@ const PORT = process.env.PORT || 3000;
 app.use(cors()); // Habilita CORS para permitir solicitudes desde otros dominios
 app.use(express.json()); // Permite a Express parsear cuerpos de solicitud con formato JSON
 
+// --- LÍNEA AÑADIDA ---
+// Sirve archivos estáticos desde la carpeta 'uploads'.
+// Esto permite acceder a las imágenes subidas desde el frontend.
+// Ejemplo: http://localhost:3000/uploads/partes/nombre-de-imagen.jpg
+app.use('/uploads', express.static('uploads'));
+
 // Middleware para loguear actividades generales. Colócalo antes de las rutas para que esté disponible en todas.
 app.use(logActivityMiddleware);
 
