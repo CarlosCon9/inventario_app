@@ -1,15 +1,14 @@
 {
   "name": "inventario_app",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "",
+  "author": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "main": "index.js",
   "dependencies": {
+    "@mdi/font": "5.9.55",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
@@ -19,6 +18,15 @@
     "nodemailer": "^7.0.3",
     "pg": "^8.16.0",
     "pg-hstore": "^2.3.4",
-    "sequelize": "^6.37.7"
-  }
+    "roboto-fontface": "*",
+    "sequelize": "^6.37.7",
+    "vuetify": "^3.0.0-beta.0",
+    "webfontloader": "^1.0.0"
+  },
+  "devDependencies": {
+    "vue-cli-plugin-vuetify": "~2.5.8",
+    "webpack-plugin-vuetify": "^2.0.0-alpha.0"
+  },
+  "keywords": [],
+  "license": "ISC"
 }
