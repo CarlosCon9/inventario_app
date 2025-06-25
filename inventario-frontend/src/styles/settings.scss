@@ -1,10 +1,18 @@
+// src/styles/settings.scss
+
 /**
- * src/styles/settings.scss
+ * Este archivo se usa para personalizar las variables globales de SASS de Vuetify.
+ * Aquí es donde, en el futuro, podrías definir la paleta de colores de tu empresa,
+ * cambiar tamaños de fuente, espaciados, etc.
  *
- * Configures SASS variables and Vuetify overwrites
+ * Por ejemplo, para cambiar el color primario de toda la aplicación a un morado,
+ * podrías descomentar las siguientes líneas:
  */
 
-// https://vuetifyjs.com/features/sass-variables/`
 // @use 'vuetify/settings' with (
-//   $color-pack: false
+//   $color-pack: false,
+//   $theme-colors: (
+//     'primary': '#4A148C',
+//     'secondary': '#9575CD'
+//   )
 // );
