@@ -1,105 +1,114 @@
 <template>
-  <v-container class="fill-height" fluid>
-    <v-row align="center" justify="center">
-      <v-col cols="12" sm="8" md="4">
-        <v-card class="elevation-12">
-          <v-toolbar color="primary" dark flat>
-            <v-toolbar-title>Inicio de Sesión</v-toolbar-title>
-          </v-toolbar>
-          <v-card-text>
-            <v-form @submit.prevent="handleLogin">
-              <v-alert
-                v-if="errorMessage"
-                type="error"
-                dense
-                text
-                class="mb-4"
-              >
-                {{ errorMessage }}
-              </v-alert>
+  <v-row no-gutters class="fill-height">
 
-              <v-text-field
-                v-model="correo"
-                label="Correo Electrónico"
-                name="login"
-                prepend-icon="mdi-account"
-                type="text"
-                required
-              ></v-text-field>
+    <v-col md="7" class="bg-blue d-none d-md-flex align-center justify-center">
+      <div class="text-center">
+        <v-img
+          src="@/assets/logo1.jpg"
+          max-height="500"
+          contain
+          class="mb-8"
+        ></v-img>
+        <h1 class="text-h4 font-weight-bold text-white mb-4">
+          Bienvenido a Inventario App <br>by Contreras Solutions
+        </h1>
+        <p class="text-body-1 text-white">
+          La solución robusta y confiable para tu negocio.
+        </p>
+      </div>
+    </v-col>
 
-              <v-text-field
-                v-model="password"
-                label="Contraseña"
-                name="password"
-                prepend-icon="mdi-lock"
-                type="password"
-                required
-              ></v-text-field>
+    <v-col cols="12" md="5" class="d-flex align-center justify-center">
+      <v-card class="bg-gray elevation-12 pa-4" width="100%" max-width="450px">
+        
+        <v-card-title class="text-center text-h5 mb-4">
+          Iniciar Sesión
+        </v-card-title>
+        
+        <v-card-text>
+          <v-form @submit.prevent="handleLogin">
+            <v-alert
+              v-if="errorMessage"
+              type="error"
+              variant="tonal"
+              class="mb-4"
+            >
+              {{ errorMessage }}
+            </v-alert>
 
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn 
-                  type="submit" 
-                  color="primary"
-                  :loading="loading"
-                  :disabled="loading"
-                >
-                  Ingresar
-                </v-btn>
-              </v-card-actions>
-            </v-form>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
-  </v-container>
+            <v-text-field
+              v-model="correo"
+              label="Correo Electrónico"
+              prepend-inner-icon="mdi-account-outline"
+              type="email"
+              variant="outlined"
+              required
+              class="mb-3"
+            ></v-text-field>
+
+            <v-text-field
+              v-model="password"
+              label="Contraseña"
+              prepend-inner-icon="mdi-lock-outline"
+              type="password"
+              variant="outlined"
+              required
+            ></v-text-field>
+            
+            <div class="text-right mb-4">
+              <a href="#" class="text-primary text-body-2">¿Olvidaste tu contraseña?</a>
+            </div>
+            
+            <v-btn 
+              type="submit" 
+              color="primary"
+              :loading="loading"
+              :disabled="loading"
+              block
+              size="large"
+            >
+              Ingresar
+            </v-btn>
+          </v-form>
+        </v-card-text>
+      </v-card>
+    </v-col>
+
+  </v-row>
 </template>
 
 <script setup>
-// --- LÓGICA DEL COMPONENTE (LA CLASE DEL PROFESOR) ---
-// Usamos <script setup> que es la sintaxis moderna y recomendada en Vue 3.
+// --- LÓGICA DEL COMPONENTE ---
+// ¡Importante! Nota que la lógica no ha cambiado en absoluto.
+// Esto demuestra el poder de Vue para separar la presentación (template) de la lógica (script).
 
-// 1. Importamos las herramientas necesarias
-import { ref } from 'vue'; // ref() se usa para crear variables reactivas locales.
-import { useAuthStore } from '@/store/authStore'; // Importamos nuestro "cerebro" de Pinia.
+import { ref } from 'vue';
+import { useAuthStore } from '@/store/authStore';
 
-// 2. Inicializamos nuestras variables y el store
-const authStore = useAuthStore(); // Creamos una instancia de nuestro store de autenticación.
-
-// Estas son las variables locales para nuestro formulario.
-// `ref('')` crea una variable reactiva que contendrá el texto de los inputs.
+const authStore = useAuthStore();
 const correo = ref('');
 const password = ref('');
-const loading = ref(false); // Para mostrar una animación de carga en el botón.
-const errorMessage = ref(null); // Para guardar cualquier mensaje de error.
+const loading = ref(false);
+const errorMessage = ref(null);
 
-// 3. Definimos la función que se ejecutará al enviar el formulario
 const handleLogin = async () => {
-    // Limpiamos errores anteriores y activamos el estado de carga
     errorMessage.value = null;
     loading.value = true;
-
     try {
-        // Llamamos a la acción 'login' de nuestro authStore.
-        // Esta acción se encargará de llamar al servicio, guardar el token y redirigir.
-        // Es una mejor práctica mantener esta lógica en el store y no en el componente.
         await authStore.login({
             correo_electronico: correo.value,
             contrasena: password.value,
         });
-        // Si el login es exitoso, el store nos redirigirá automáticamente.
     } catch (error) {
-        // Si el store lanza un error (ej. credenciales inválidas), lo atrapamos aquí.
-        errorMessage.value = error.response?.data?.message || 'Error al iniciar sesión. Por favor, intente de nuevo.';
+        errorMessage.value = error.response?.data?.message || 'Error al iniciar sesión.';
     } finally {
-        // Pase lo que pase, desactivamos el estado de carga
         loading.value = false;
     }
 };
 </script>
 
-<style>
-/* Opcional: Pequeños estilos para asegurar que el contenedor ocupe toda la altura. */
+<style scoped>
+/* Scoped CSS significa que estos estilos solo se aplican a este componente */
 .fill-height {
   min-height: 100vh;
 }

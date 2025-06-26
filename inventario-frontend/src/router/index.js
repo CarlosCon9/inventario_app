@@ -1,30 +1,60 @@
 // src/router/index.js
+
 import { createRouter, createWebHistory } from 'vue-router'
-import LoginView from '../views/LoginView.vue'; // Importamos nuestra nueva vista
+import DefaultLayout from '@/layouts/default.vue'
+import { useAuthStore } from '@/store/authStore'
 
 const routes = [
   {
+    // Esta es la ruta padre que usará nuestro layout principal.
+    // Todas las rutas anidadas dentro de 'children' se mostrarán dentro de este layout.
     path: '/',
-    redirect: '/login' // Si alguien va a la raíz, lo mandamos al login
+    component: DefaultLayout,
+    children: [
+      {
+        path: 'dashboard',
+        name: 'Dashboard',
+        component: () => import('@/views/DashboardView.vue'),
+        meta: { requiresAuth: true } // <-- Metadato para nuestro guardia
+      },
+      // Aquí añadiremos las demás rutas (partes, proveedores, etc.) en el futuro
+    ],
   },
   {
+    // La ruta de Login queda fuera del layout principal porque no tiene menú lateral.
     path: '/login',
     name: 'Login',
-    component: LoginView
+    component: () => import('@/views/LoginView.vue'),
+    meta: { requiresAuth: false }
   },
-  {
-    // Esta es una ruta de ejemplo para el dashboard, la construiremos después.
-    path: '/dashboard',
-    name: 'Dashboard',
-    // Esto es "lazy loading", una mejor práctica que hace que la página
-    // solo se cargue cuando el usuario la visita.
-    component: () => import('@/views/DashboardView.vue') 
-  }
 ]
 
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
-  routes
+  routes,
 })
+
+// --- GUARDIA DE NAVEGACIÓN (NAVIGATION GUARD) ---
+// Este código se ejecuta ANTES de cada cambio de ruta.
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore();
+  const isAuthenticated = authStore.isAuthenticated;
+
+  // 1. Si la ruta requiere autenticación y el usuario NO está logueado...
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    // ...lo mandamos al login.
+    next({ name: 'Login' });
+  } 
+  // 2. Si el usuario intenta ir al login pero YA está logueado...
+  else if (to.name === 'Login' && isAuthenticated) {
+    // ...lo mandamos al dashboard para que no vuelva a iniciar sesión.
+    next({ name: 'Dashboard' });
+  } 
+  // 3. En cualquier otro caso, le permitimos continuar a su destino.
+  else {
+    next();
+  }
+});
+
 
 export default router
