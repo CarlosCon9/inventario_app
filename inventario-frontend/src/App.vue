@@ -1,7 +1,7 @@
 <template>
-  <v-app>
-    <v-main>
-      <router-view />
-    </v-main>
-  </v-app>
+  <router-view />
 </template>
+
+<script setup>
+  // No se necesita ninguna lógica en este componente raíz.
+</script>
