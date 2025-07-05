@@ -3,18 +3,11 @@
 </template>
 
 <script setup>
-// --- IMPORTACIONES ---
-// Importamos las herramientas necesarias desde las librerías de gráficos.
 import { Doughnut } from 'vue-chartjs';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, Title } from 'chart.js';
 
-// --- REGISTRO DE COMPONENTES DE CHART.JS ---
-// Es obligatorio registrar los "ladrillos" que usará nuestro gráfico.
 ChartJS.register(ArcElement, Tooltip, Legend, Title);
 
-// --- DEFINICIÓN DE PROPS ---
-// 'defineProps' es cómo un componente hijo recibe datos de su componente padre (el Dashboard).
-// Esperamos recibir un prop llamado 'chartData' que debe ser un objeto.
 const props = defineProps({
   chartData: {
     type: Object,
@@ -22,19 +15,34 @@ const props = defineProps({
   },
 });
 
-// --- OPCIONES DE VISUALIZACIÓN DEL GRÁFICO ---
-// Aquí definimos cómo se verá y comportará nuestro gráfico.
 const chartOptions = {
-  responsive: true, // Hace que el gráfico se adapte al tamaño de su contenedor.
-  maintainAspectRatio: false, // Permite que el gráfico no sea siempre cuadrado.
+  responsive: true,
+  maintainAspectRatio: false,
   plugins: {
+    // --- CAMBIO CLAVE ---
+    // Desactivamos la leyenda por defecto del gráfico.
     legend: {
-      position: 'top', // La leyenda de colores aparecerá arriba.
+      display: false,
     },
     title: {
       display: true,
-      text: 'Valor de Inventario por Categoría', // Título del gráfico.
+      text: 'Valor de Inventario por Categoría',
     },
+    // El tooltip personalizado que hicimos antes se mantiene igual.
+    tooltip: {
+      callbacks: {
+        label: function(context) {
+          let label = context.dataset.label || context.label || '';
+          if (label) {
+            label += ': ';
+          }
+          if (context.raw !== null) {
+            label += new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(context.raw);
+          }
+          return label;
+        }
+      }
+    }
   },
 };
 </script>

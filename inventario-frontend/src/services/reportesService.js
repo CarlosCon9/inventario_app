@@ -12,4 +12,12 @@ export default {
     getValorInventario() {
         return apiClient.get('/reportes/valor-inventario');
     },
+
+    /**
+     * Obtiene la lista de todos los items únicos (SKUs).
+     * @returns {Promise} La promesa de la petición de Axios.
+     */
+    getListaItemsUnicos() {
+        return apiClient.get('/reportes/lista-items-unicos');
+    },
 };
