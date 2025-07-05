@@ -78,32 +78,39 @@
 </template>
 
 <script setup>
-// --- LÓGICA DEL COMPONENTE ---
-// ¡Importante! Nota que la lógica no ha cambiado en absoluto.
-// Esto demuestra el poder de Vue para separar la presentación (template) de la lógica (script).
-
 import { ref } from 'vue';
 import { useAuthStore } from '@/store/authStore';
+import { useRouter } from 'vue-router'; // <-- Importamos el router
 
 const authStore = useAuthStore();
+const router = useRouter(); // <-- Obtenemos la instancia del router
+
 const correo = ref('');
 const password = ref('');
 const loading = ref(false);
 const errorMessage = ref(null);
 
 const handleLogin = async () => {
-    errorMessage.value = null;
-    loading.value = true;
-    try {
-        await authStore.login({
-            correo_electronico: correo.value,
-            contrasena: password.value,
-        });
-    } catch (error) {
-        errorMessage.value = error.response?.data?.message || 'Error al iniciar sesión.';
-    } finally {
-        loading.value = false;
-    }
+  errorMessage.value = null;
+  loading.value = true;
+  try {
+    // Llamamos a la acción del store.
+    await authStore.login({
+        correo_electronico: correo.value,
+        contrasena: password.value,
+    });
+
+    // --- LÓGICA DE REDIRECCIÓN AÑADIDA ---
+    // Si la línea anterior no lanzó un error, el login fue exitoso.
+    // AHORA NOSOTROS, desde la vista, hacemos la redirección.
+    router.push('/dashboard');
+
+  } catch (error) {
+    // El store nos lanza el error y aquí lo mostramos al usuario.
+    errorMessage.value = error.response?.data?.message || 'Error al iniciar sesión.';
+  } finally {
+    loading.value = false;
+  }
 };
 </script>
 

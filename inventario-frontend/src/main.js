@@ -3,15 +3,15 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
-import vuetify from './plugins/vuetify' // El plugin de Vuetify ya se encarga de las fuentes.
+import vuetify from './plugins/vuetify'
 import { createPinia } from 'pinia'
 
+const app = createApp(App)
 const pinia = createPinia()
 
-const app = createApp(App)
-
-app.use(router)
-app.use(vuetify)
-app.use(pinia)
+// --- ORDEN CORREGIDO (MEJOR PRÁCTICA) ---
+app.use(pinia)   // 1. Registra Pinia para que esté disponible en toda la app.
+app.use(router)  // 2. Registra el Router, que ahora puede usar Pinia en sus guardias.
+app.use(vuetify) // 3. Registra Vuetify.
 
 app.mount('#app')
