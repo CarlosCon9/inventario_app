@@ -269,3 +269,21 @@ exports.deleteProveedor = async (req, res) => {
         res.status(500).json({ message: 'Error interno del servidor al eliminar proveedor.', error: error.message });
     }
 };
+
+/**
+ * @controller  getTodosLosProveedores
+ * @description Devuelve una lista simple de todos los proveedores (para selects/dropdowns).
+ * @route       GET /api/proveedores/todos
+ */
+exports.getTodosLosProveedores = async (req, res) => {
+    try {
+        const proveedores = await Proveedor.findAll({
+            order: [['nombre', 'ASC']],
+            attributes: ['id', 'nombre'] // Solo necesitamos el ID y el nombre
+        });
+        res.status(200).json(proveedores);
+    } catch (error) {
+        console.error('Error al obtener todos los proveedores:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+};

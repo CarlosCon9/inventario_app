@@ -21,6 +21,10 @@ router.post('/', verifyAccessToken, authorizeRoles(['administrador', 'operador']
 // Todos los usuarios autenticados pueden acceder.
 router.get('/', verifyAccessToken, authorizeRoles(['administrador', 'operador', 'consulta']), proveedorController.getAllProveedores);
 
+// --- RUTA NUEVA ---
+// Esta ruta debe ir ANTES de la ruta '/:id' para que no haya conflictos.
+router.get('/todos', verifyAccessToken, authorizeRoles('administrador', 'operador'), proveedorController.getTodosLosProveedores);
+
 // Ruta para obtener un proveedor específico por su ID.
 // Todos los usuarios autenticados pueden acceder.
 router.get('/:id', verifyAccessToken, authorizeRoles(['administrador', 'operador', 'consulta']), proveedorController.getProveedorById);
@@ -32,6 +36,8 @@ router.put('/:id', verifyAccessToken, authorizeRoles(['administrador', 'operador
 // Ruta para eliminar un proveedor por su ID.
 // Solo 'administrador' puede acceder.
 router.delete('/:id', verifyAccessToken, authorizeRoles(['administrador']), proveedorController.deleteProveedor);
+
+
 
 // --- 3. EXPORTACIÓN ---
 module.exports = router;

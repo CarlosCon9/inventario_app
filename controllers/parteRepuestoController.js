@@ -1,13 +1,9 @@
 // controllers/parteRepuestoController.js
 
+const { Op, Sequelize } = require('sequelize');
 const { ParteRepuesto, Proveedor, MovimientoInventario, sequelize } = require('../models');
 
-/**
- * @description Función de ayuda para calcular el precio de venta. Es reutilizable y mantiene la lógica de negocio centralizada.
- * @param {number} precioCompra - El precio de compra del producto.
- * @param {number} porcentajeGanancia - El porcentaje de ganancia deseado.
- * @returns {Promise<number|null>} El precio de venta calculado o null si no se puede calcular.
- */
+
 async function calcularPrecioVenta(precioCompra, porcentajeGanancia) {
     // Si no se proporciona alguno de los dos valores necesarios, no se puede calcular.
     if (precioCompra === null || precioCompra === undefined || porcentajeGanancia === null || porcentajeGanancia === undefined) {
@@ -27,6 +23,63 @@ async function calcularPrecioVenta(precioCompra, porcentajeGanancia) {
     return Math.round(precioVenta * 100) / 100;
 }
 
+
+exports.getAllPartesRepuestos = async (req, res) => {
+    try {
+        // 1. Extraemos los parámetros de paginación, orden y búsqueda desde la URL.
+        //    Establecemos valores por defecto si no vienen en la petición.
+        const { page = 1, itemsPerPage = 10, sortBy = [], search = '' } = req.query;
+
+        // 2. Preparamos el objeto de opciones para la consulta de Sequelize.
+        const options = {
+            limit: parseInt(itemsPerPage, 10),
+            offset: (parseInt(page, 10) - 1) * parseInt(itemsPerPage, 10),
+            order: [],
+            where: {},
+            include: [{
+                model: Proveedor,
+                as: 'proveedor',
+                attributes: ['id', 'nombre']
+            }]
+        };
+
+        // 3. Construimos la cláusula de ordenamiento.
+        //    Vuetify envía 'sortBy' como un arreglo de objetos JSON string.
+        if (sortBy && sortBy.length > 0) {
+            // Aseguramos que sea un arreglo antes de mapearlo.
+            const parsedSortBy = typeof sortBy === 'string' ? JSON.parse(sortBy) : sortBy;
+            options.order = parsedSortBy.map(sort => [sort.key, sort.order ? sort.order.toUpperCase() : 'ASC']);
+        } else {
+            // Un orden por defecto si no se especifica ninguno.
+            options.order.push(['nombre', 'ASC']);
+        }
+
+        // 4. Construimos la cláusula de búsqueda.
+        if (search) {
+            options.where = {
+                [Op.or]: [
+                    { nombre: { [Op.iLike]: `%${search}%` } },
+                    { numero_parte: { [Op.iLike]: `%${search}%` } },
+                    { descripcion: { [Op.iLike]: `%${search}%` } }
+                ]
+            };
+        }
+
+        // 5. Ejecutamos la consulta con findAndCountAll.
+        //    Esta función es perfecta porque devuelve tanto los items de la página actual como el conteo total.
+        const { count, rows } = await ParteRepuesto.findAndCountAll(options);
+
+        // 6. Enviamos la respuesta en el formato que espera v-data-table-server.
+        res.status(200).json({
+            items: rows,
+            totalItems: count
+        });
+
+    } catch (error) {
+        console.error('Error al obtener partes/repuestos:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+};
 // CREATE - Crea una nueva parte/repuesto
 exports.createParteRepuesto = async (req, res) => {
     const t = await sequelize.transaction();
@@ -46,19 +99,6 @@ exports.createParteRepuesto = async (req, res) => {
         console.error('Error al crear parte/repuesto:', error);
         await req.logActivity('crear_parte', 'ParteRepuesto', null, { error: error.message }, 'FALLO');
         res.status(500).json({ message: 'Error interno del servidor al crear la parte.', error: error.message });
-    }
-};
-
-// READ ALL - Obtiene todas las partes/repuestos
-exports.getAllPartesRepuestos = async (req, res) => {
-    try {
-        const partes = await ParteRepuesto.findAll({ 
-            include: [{ model: Proveedor, as: 'proveedor', attributes: ['id', 'nombre'] }],
-            order: [['nombre', 'ASC']]
-        });
-        res.status(200).json(partes);
-    } catch (error) {
-        res.status(500).json({ message: 'Error al obtener partes.', error: error.message });
     }
 };
 

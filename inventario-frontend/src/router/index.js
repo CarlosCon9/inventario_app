@@ -3,71 +3,63 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/store/authStore';
 
-// No necesitamos importar los componentes aquí arriba.
-
 const routes = [
   {
+    // --- RUTA PADRE ---
+    // Esta ruta carga nuestro layout principal y protege todas las rutas hijas.
     path: '/',
-    // Usamos Lazy Loading para el layout. Esto es una mejor práctica.
     component: () => import('@/layouts/default.vue'),
-    meta: { requiresAuth: true }, // Protegemos todas las rutas que usen este layout.
-    children: [
+    meta: { requiresAuth: true },
+    children: [ // <-- Las vistas internas van aquí dentro
       {
-        path: 'dashboard', // La URL será /dashboard
+        path: 'dashboard',
         name: 'Dashboard',
-        // --- CAMBIO CLAVE ---
-        // Usamos una función de flecha para importar el componente.
-        // Esto es "lazy loading" y es la forma correcta de registrar componentes de vista.
         component: () => import('@/views/DashboardView.vue'),
       },
-      // Aquí añadiremos las demás vistas (partes, proveedores, etc.) en el futuro
+      // --- RUTA CORREGIDA Y EN SU LUGAR CORRECTO ---
+      // Como es una ruta hija de '/', su path es relativo ('partes').
+      // Vue Router lo unirá para formar la URL completa '/partes'.
+      {
+        path: 'partes', 
+        name: 'Partes',
+        component: () => import('@/views/PartesView.vue'),
+      },
+      // Aquí añadiremos en el futuro las demás vistas internas...
     ]
   },
   {
+    // La ruta de Login es independiente y no usa el layout principal.
     path: '/login',
     name: 'Login',
-    // --- CAMBIO CLAVE ---
-    // Hacemos lo mismo para la vista de Login.
     component: () => import('@/views/LoginView.vue'),
-    meta: { requiresAuth: false }
   },
   { 
     path: '/:pathMatch(.*)*', 
-    redirect: { name: 'Login' } // Es más robusto redirigir al nombre de la ruta
+    redirect: '/login' 
   }
 ];
 
 const router = createRouter({
-  history: createWebHistory(), // Corregido para no usar process.env
+  history: createWebHistory(),
   routes
 });
 
-// El Guardia de Navegación se mantiene igual
+// El Guardia de Navegación se mantiene igual, no necesita cambios.
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
-
-  // Si el token está en localStorage pero no en el store (ej. después de recargar la página), lo restauramos.
   if (!authStore.isAuthenticated && localStorage.getItem('token')) {
     authStore.token = localStorage.getItem('token');
     authStore.user = JSON.parse(localStorage.getItem('user'));
   }
-
   const isAuthenticated = authStore.isAuthenticated;
 
-  // Si la ruta requiere autenticación y el usuario NO está logueado...
   if (to.meta.requiresAuth && !isAuthenticated) {
     return next({ name: 'Login' });
-  } 
-  // Si el usuario intenta ir al login pero YA está logueado...
-  else if (to.name === 'Login' && isAuthenticated) {
+  } else if (to.name === 'Login' && isAuthenticated) {
     return next({ name: 'Dashboard' });
-  } 
-  // Si un usuario logueado va a la ruta raíz ('/'), lo mandamos al dashboard
-  else if (to.path === '/' && isAuthenticated) {
+  } else if (to.path === '/' && isAuthenticated) {
     return next({ name: 'Dashboard' });
-  }
-  // En cualquier otro caso, le permitimos el paso.
-  else {
+  } else {
     next();
   }
 });
