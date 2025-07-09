@@ -162,10 +162,6 @@ exports.getProveedorById = async (req, res) => {
     }
 };
 
-/**
- * @controller updateProveedor
- * @description Actualiza un proveedor existente por su ID.
- */
 exports.updateProveedor = async (req, res) => {
     const proveedorId = req.params.id;
     const requestorUserId = req.user.id;
@@ -226,10 +222,6 @@ exports.updateProveedor = async (req, res) => {
     }
 };
 
-/**
- * @controller deleteProveedor
- * @description Elimina un proveedor por su ID.
- */
 exports.deleteProveedor = async (req, res) => {
     const proveedorId = req.params.id;
     const requestorUserId = req.user.id;
@@ -270,11 +262,6 @@ exports.deleteProveedor = async (req, res) => {
     }
 };
 
-/**
- * @controller  getTodosLosProveedores
- * @description Devuelve una lista simple de todos los proveedores (para selects/dropdowns).
- * @route       GET /api/proveedores/todos
- */
 exports.getTodosLosProveedores = async (req, res) => {
     try {
         const proveedores = await Proveedor.findAll({

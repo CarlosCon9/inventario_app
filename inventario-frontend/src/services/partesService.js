@@ -2,7 +2,6 @@
 import apiClient from './api';
 
 export default {
-    // --- OBTENER LISTA PAGINADA (Existente) ---
     getPartes(options) {
         const params = new URLSearchParams();
         if (options.page) params.append('page', options.page);
@@ -14,20 +13,26 @@ export default {
         return apiClient.get('/partes-repuestos', { params });
     },
 
-    // --- FUNCIONES CRUD (Existentes y verificadas) ---
     getParteById(id) {
         return apiClient.get(`/partes-repuestos/${id}`);
     },
+
     createParte(data) {
         return apiClient.post('/partes-repuestos', data);
     },
+
     updateParte(id, data) {
         return apiClient.put(`/partes-repuestos/${id}`, data);
     },
+
     deleteParte(id) {
         return apiClient.delete(`/partes-repuestos/${id}`);
     },
+
+    // --- FUNCIÓN CORREGIDA ---
     uploadImagen(id, formData) {
+        // Le pasamos explícitamente la cabecera 'multipart/form-data'.
+        // Esto le dice a Axios y al servidor cómo manejar la petición de archivo.
         return apiClient.put(`/partes-repuestos/${id}/upload`, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
@@ -35,10 +40,6 @@ export default {
         });
     },
 
-    // --- NUEVA FUNCIÓN ---
-    /**
-     * Obtiene la lista completa de proveedores para usar en un select.
-     */
     getProveedoresList() {
         return apiClient.get('/proveedores/todos');
     }
