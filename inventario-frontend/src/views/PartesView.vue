@@ -135,7 +135,7 @@ const search = ref('');
 const tableOptions = ref({});
 
 const openImageDialog = (item) => {
-    if (item.imagen_url) {
+    if (item && item.imagen_url) {
         imageUrlToView.value = getImageUrl(item.imagen_url);
         imageDialog.value = true;
     }
@@ -180,25 +180,17 @@ const closeDeleteDialog = () => {
 };
 
 const saveItem = async ({ parteData, imagenFile }) => {
-    try {
-        let savedItem;
-        if (parteData.id) {
-            const response = await partesService.updateParte(parteData.id, parteData);
-            savedItem = response.data;
-        } else {
-            const response = await partesService.createParte(parteData);
-            savedItem = response.data;
-        }
-        if (imagenFile && savedItem.id) {
-            const formData = new FormData();
-            formData.append('imagen', imagenFile);
-            await partesService.uploadImagen(savedItem.id, formData);
-        }
-        closeDialog();
-        loadItems(tableOptions.value);
-    } catch (error) {
-        console.error("Error al guardar el ítem:", error);
+  try {
+    if (parteData.id) {
+      await partesService.updateParte(parteData.id, parteData, imagenFile);
+    } else {
+      await partesService.createParte(parteData, imagenFile);
     }
+    closeDialog();
+    loadItems(tableOptions.value);
+  } catch (error) {
+    console.error("Error al guardar el ítem:", error);
+  }
 };
 
 const deleteItemConfirm = async () => {

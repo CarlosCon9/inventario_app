@@ -1,45 +1,49 @@
 // src/services/api.js
-
 import axios from 'axios';
-import { useAuthStore } from '@/store/authStore'; // Importamos nuestro futuro store de autenticación
+import { useAuthStore } from '@/store/authStore';
 
-/**
- * Creación de una instancia de Axios con configuración base.
- * Esta es la forma profesional de manejar las llamadas a la API,
- * ya que centraliza la URL base y la configuración de cabeceras.
- */
 const apiClient = axios.create({
-    // La URL base de nuestro backend.
-    // Todas las peticiones se harán a esta URL + el endpoint específico.
-    baseURL: 'http://localhost:3000/api', // Apunta a nuestro servidor de Node.js
+    baseURL: 'http://localhost:3000/api',
     headers: {
         'Content-Type': 'application/json',
     },
 });
 
-/**
- * Interceptor de peticiones de Axios.
- * Esta es una de las características más potentes de Axios.
- * Esta función se ejecutará ANTES de que cada petición sea enviada.
- * Su trabajo es revisar si tenemos un token de autenticación y añadirlo
- * a la cabecera 'Authorization' si existe.
- */
+// Interceptor de Peticiones: Añade el token a cada llamada.
 apiClient.interceptors.request.use(
     (config) => {
-        const authStore = useAuthStore(); // Obtenemos la instancia del store de Pinia
-        const token = authStore.token;    // Obtenemos el token
-
+        const authStore = useAuthStore();
+        const token = authStore.token;
         if (token) {
-            // Si hay un token, lo añadimos a la cabecera de la petición
             config.headers['Authorization'] = `Bearer ${token}`;
         }
         return config;
     },
     (error) => {
-        // Manejar errores de la configuración de la petición
         return Promise.reject(error);
     }
 );
 
-// Exportamos la instancia de apiClient para usarla en otros servicios
+// --- INTERCEPTOR DE RESPUESTAS (AÑADIDO Y CRUCIAL) ---
+// Este interceptor nos permite manejar los errores de forma centralizada.
+apiClient.interceptors.response.use(
+    // Si la respuesta es exitosa (código 2xx), simplemente la devolvemos.
+    (response) => response,
+
+    // Si la respuesta tiene un error (código 4xx o 5xx)...
+    (error) => {
+        // Si el error es un 401 (No Autorizado), significa que el token es inválido o expiró.
+        // La mejor práctica es desloguear al usuario y mandarlo al login.
+        if (error.response && error.response.status === 401) {
+            const authStore = useAuthStore();
+            authStore.logout();
+        }
+
+        // Es MUY IMPORTANTE que devolvamos el error para que la función que
+        // hizo la llamada original (ej. en la vista) pueda atraparlo en su bloque `catch`.
+        // Si no hacemos esto, la vista recibirá 'undefined'.
+        return Promise.reject(error);
+    }
+);
+
 export default apiClient;

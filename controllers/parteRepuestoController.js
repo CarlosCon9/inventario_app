@@ -1,36 +1,93 @@
 // controllers/parteRepuestoController.js
-
-const { Op, Sequelize } = require('sequelize');
+const { Op } = require('sequelize');
 const { ParteRepuesto, Proveedor, MovimientoInventario, sequelize } = require('../models');
+const fs = require('fs');
+const path = require('path');
 
+const saveFile = (fileBuffer, parteId, originalName) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const filename = `parte-${parteId}-${uniqueSuffix}${path.extname(originalName)}`;
+    const filePath = path.join('uploads/partes/', filename);
+    fs.writeFileSync(filePath, fileBuffer);
+    return filePath.replace(/\\/g, "/");
+};
 
-async function calcularPrecioVenta(precioCompra, porcentajeGanancia) {
-    // Si no se proporciona alguno de los dos valores necesarios, no se puede calcular.
-    if (precioCompra === null || precioCompra === undefined || porcentajeGanancia === null || porcentajeGanancia === undefined) {
-        return null;
-    }
-
+// Función de ayuda para calcular el precio de venta
+const calcularPrecioVentaSugerido = (precioCompra, porcentajeGanancia) => {
     const precio = parseFloat(precioCompra);
     const porcentaje = parseFloat(porcentajeGanancia);
-
-    // Verificamos que ambos sean números válidos.
-    if (isNaN(precio) || isNaN(porcentaje)) {
-        return null;
+    if (!isNaN(precio) && !isNaN(porcentaje)) {
+        const precioVenta = precio * (1 + (porcentaje / 100));
+        return Math.round(precioVenta * 100) / 100;
     }
+    return null;
+};
 
-    const precioVenta = precio * (1 + (porcentaje / 100));
-    // Redondeamos a 2 decimales para asegurar consistencia monetaria.
-    return Math.round(precioVenta * 100) / 100;
-}
+// CREATE - Ahora maneja texto y archivo, y siempre calcula el precio.
+exports.createParteRepuesto = async (req, res) => {
+    const t = await sequelize.transaction();
+    try {
+        const parteData = req.body;
+        
+        // El backend recalcula el precio de venta, asegurando la lógica de negocio.
+        parteData.precio_venta_sugerido = calcularPrecioVentaSugerido(parteData.precio_compra, parteData.porcentaje_ganancia);
 
+        const nuevaParte = await ParteRepuesto.create(parteData, { transaction: t });
 
+        if (req.file) {
+            const imagePath = saveFile(req.file.buffer, nuevaParte.id, req.file.originalname);
+            nuevaParte.imagen_url = imagePath;
+            await nuevaParte.save({ transaction: t });
+        }
+        
+        await t.commit();
+        res.status(201).json(nuevaParte);
+    } catch (error) {
+        await t.rollback();
+        console.error('Error al crear parte/repuesto:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+};
+
+// UPDATE - También maneja texto y archivo, y siempre calcula el precio.
+exports.updateParteRepuesto = async (req, res) => {
+    const t = await sequelize.transaction();
+    try {
+        const parte = await ParteRepuesto.findByPk(req.params.id, { transaction: t });
+        if (!parte) {
+            await t.rollback();
+            return res.status(404).json({ message: 'Parte/repuesto no encontrado.' });
+        }
+
+        const datosActualizar = req.body;
+        datosActualizar.precio_venta_sugerido = calcularPrecioVentaSugerido(datosActualizar.precio_compra, datosActualizar.porcentaje_ganancia);
+        
+        await parte.update(datosActualizar, { transaction: t });
+        
+        if (req.file) {
+            const imagePath = saveFile(req.file.buffer, parte.id, req.file.originalname);
+            parte.imagen_url = imagePath;
+            await parte.save({ transaction: t });
+        }
+
+        await t.commit();
+        const parteActualizada = await ParteRepuesto.findByPk(req.params.id, {
+            include: [{ model: Proveedor, as: 'proveedor' }]
+        });
+        res.status(200).json(parteActualizada);
+    } catch (error) {
+        await t.rollback();
+        console.error('Error al actualizar parte/repuesto:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+};
+
+// --- GET ALL (PAGINADA) - ¡LA FUNCIÓN QUE RESTAURAMOS! ---
+// Esta función es crucial para que la tabla del frontend pueda mostrar los productos.
 exports.getAllPartesRepuestos = async (req, res) => {
     try {
-        // 1. Extraemos los parámetros de paginación, orden y búsqueda desde la URL.
-        //    Establecemos valores por defecto si no vienen en la petición.
         const { page = 1, itemsPerPage = 10, sortBy = [], search = '' } = req.query;
 
-        // 2. Preparamos el objeto de opciones para la consulta de Sequelize.
         const options = {
             limit: parseInt(itemsPerPage, 10),
             offset: (parseInt(page, 10) - 1) * parseInt(itemsPerPage, 10),
@@ -43,18 +100,13 @@ exports.getAllPartesRepuestos = async (req, res) => {
             }]
         };
 
-        // 3. Construimos la cláusula de ordenamiento.
-        //    Vuetify envía 'sortBy' como un arreglo de objetos JSON string.
         if (sortBy && sortBy.length > 0) {
-            // Aseguramos que sea un arreglo antes de mapearlo.
             const parsedSortBy = typeof sortBy === 'string' ? JSON.parse(sortBy) : sortBy;
             options.order = parsedSortBy.map(sort => [sort.key, sort.order ? sort.order.toUpperCase() : 'ASC']);
         } else {
-            // Un orden por defecto si no se especifica ninguno.
             options.order.push(['nombre', 'ASC']);
         }
 
-        // 4. Construimos la cláusula de búsqueda.
         if (search) {
             options.where = {
                 [Op.or]: [
@@ -65,11 +117,8 @@ exports.getAllPartesRepuestos = async (req, res) => {
             };
         }
 
-        // 5. Ejecutamos la consulta con findAndCountAll.
-        //    Esta función es perfecta porque devuelve tanto los items de la página actual como el conteo total.
         const { count, rows } = await ParteRepuesto.findAndCountAll(options);
 
-        // 6. Enviamos la respuesta en el formato que espera v-data-table-server.
         res.status(200).json({
             items: rows,
             totalItems: count
@@ -80,44 +129,33 @@ exports.getAllPartesRepuestos = async (req, res) => {
         res.status(500).json({ message: 'Error interno del servidor.' });
     }
 };
-// CREATE - Crea una nueva parte/repuesto
+
+// --- CREATE - Maneja texto y archivo en una sola petición ---
 exports.createParteRepuesto = async (req, res) => {
     const t = await sequelize.transaction();
     try {
-        const datos = req.body;
-        
-        // La lógica de cálculo ahora usa nuestra función de ayuda.
-        datos.precio_venta_sugerido = await calcularPrecioVenta(datos.precio_compra, datos.porcentaje_ganancia);
+        const parteData = req.body;
+        // Creamos la parte primero para tener un ID.
+        const nuevaParte = await ParteRepuesto.create(parteData, { transaction: t });
 
-        const nuevaParte = await ParteRepuesto.create(datos, { transaction: t });
-        await t.commit();
+        // Si la petición incluye un archivo (gracias a multer), lo guardamos.
+        if (req.file) {
+            const imagePath = saveFile(req.file.buffer, nuevaParte.id, req.file.originalname);
+            nuevaParte.imagen_url = imagePath;
+            // Guardamos la nueva ruta de la imagen en el registro.
+            await nuevaParte.save({ transaction: t });
+        }
         
-        await req.logActivity('crear_parte', 'ParteRepuesto', nuevaParte.id, nuevaParte.toJSON(), 'EXITO');
+        await t.commit();
         res.status(201).json(nuevaParte);
     } catch (error) {
         await t.rollback();
         console.error('Error al crear parte/repuesto:', error);
-        await req.logActivity('crear_parte', 'ParteRepuesto', null, { error: error.message }, 'FALLO');
-        res.status(500).json({ message: 'Error interno del servidor al crear la parte.', error: error.message });
+        res.status(500).json({ message: 'Error interno del servidor.' });
     }
 };
 
-// READ ONE - Obtiene una parte/repuesto por su ID
-exports.getParteRepuestoById = async (req, res) => {
-     try {
-        const parte = await ParteRepuesto.findByPk(req.params.id, { 
-            include: [{ model: Proveedor, as: 'proveedor' }] 
-        });
-        if (!parte) {
-            return res.status(404).json({ message: 'Parte/repuesto no encontrado.' });
-        }
-        res.status(200).json(parte);
-    } catch (error) {
-        res.status(500).json({ message: 'Error al obtener la parte.', error: error.message });
-    }
-};
-
-// UPDATE - Actualiza una parte/repuesto
+// --- UPDATE - También maneja texto y archivo en una sola petición ---
 exports.updateParteRepuesto = async (req, res) => {
     const t = await sequelize.transaction();
     try {
@@ -127,60 +165,41 @@ exports.updateParteRepuesto = async (req, res) => {
             return res.status(404).json({ message: 'Parte/repuesto no encontrado.' });
         }
 
-        const oldData = parte.toJSON();
-        const datosActualizar = req.body;
-
-        const precioCompraFinal = datosActualizar.precio_compra !== undefined ? datosActualizar.precio_compra : parte.precio_compra;
-        const porcentajeGananciaFinal = datosActualizar.porcentaje_ganancia !== undefined ? datosActualizar.porcentaje_ganancia : parte.porcentaje_ganancia;
+        // Actualizamos los datos de texto.
+        await parte.update(req.body, { transaction: t });
         
-        datosActualizar.precio_venta_sugerido = await calcularPrecioVenta(precioCompraFinal, porcentajeGananciaFinal);
+        // Si la petición de actualización incluye un nuevo archivo, lo guardamos.
+        if (req.file) {
+            const imagePath = saveFile(req.file.buffer, parte.id, req.file.originalname);
+            parte.imagen_url = imagePath;
+            await parte.save({ transaction: t });
+        }
 
-        await parte.update(datosActualizar, { transaction: t });
         await t.commit();
-        
-        await req.logActivity('actualizar_parte', 'ParteRepuesto', parte.id, { oldData, newData: parte.toJSON() }, 'EXITO');
         res.status(200).json(parte);
     } catch (error) {
         await t.rollback();
         console.error('Error al actualizar parte/repuesto:', error);
-        await req.logActivity('actualizar_parte', 'ParteRepuesto', req.params.id, { error: error.message }, 'FALLO');
-        res.status(500).json({ message: 'Error interno del servidor al actualizar la parte.', error: error.message });
+        res.status(500).json({ message: 'Error interno del servidor.' });
     }
 };
 
-// UPLOAD IMAGE - Sube una imagen para una parte/repuesto
-exports.uploadImagen = async (req, res) => {
-    const t = await sequelize.transaction();
+// --- GET BY ID ---
+exports.getParteRepuestoById = async (req, res) => {
     try {
-        const parte = await ParteRepuesto.findByPk(req.params.id, { transaction: t });
+        const parte = await ParteRepuesto.findByPk(req.params.id, {
+            include: [{ model: Proveedor, as: 'proveedor' }]
+        });
         if (!parte) {
-            await t.rollback();
             return res.status(404).json({ message: 'Parte/repuesto no encontrado.' });
         }
-
-        if (!req.file) {
-            await t.rollback();
-            return res.status(400).json({ message: 'No se ha subido ningún archivo.' });
-        }
-
-        const oldData = parte.toJSON();
-        parte.imagen_url = req.file.path.replace(/\\/g, "/"); // Normalizamos la ruta para web
-
-        await parte.save({ transaction: t });
-        await t.commit();
-        
-        await req.logActivity('upload_imagen_parte', 'ParteRepuesto', parte.id, { oldUrl: oldData.imagen_url, newUrl: parte.imagen_url }, 'EXITO');
         res.status(200).json(parte);
-
     } catch (error) {
-        await t.rollback();
-        console.error('Error al subir imagen:', error);
-        await req.logActivity('upload_imagen_parte', 'ParteRepuesto', req.params.id, { error: error.message }, 'FALLO');
-        res.status(500).json({ message: 'Error interno del servidor al subir la imagen.', error: error.message });
+        res.status(500).json({ message: 'Error interno del servidor.' });
     }
 };
 
-// DELETE - Elimina una parte/repuesto
+// --- DELETE ---
 exports.deleteParteRepuesto = async (req, res) => {
     const t = await sequelize.transaction();
     try {
@@ -190,21 +209,18 @@ exports.deleteParteRepuesto = async (req, res) => {
             return res.status(404).json({ message: 'Parte/repuesto no encontrado.' });
         }
         
-        // Verificamos si la parte tiene movimientos asociados
-        const movimientos = await MovimientoInventario.count({ where: { parte_repuesto_id: req.params.id }, transaction: t });
+        const movimientos = await MovimientoInventario.count({ where: { parte_repuesto_id: req.params.id } });
         if (movimientos > 0) {
-            await t.rollback();
+             await t.rollback();
             return res.status(409).json({ message: `No se puede eliminar: la parte tiene ${movimientos} movimiento(s) de inventario asociados.` });
         }
-        
-        const deletedData = parte.toJSON();
+
         await parte.destroy({ transaction: t });
         await t.commit();
-        await req.logActivity('eliminar_parte', 'ParteRepuesto', req.params.id, deletedData, 'EXITO');
         res.status(200).json({ message: 'Parte/repuesto eliminado exitosamente.' });
     } catch (error) {
         await t.rollback();
-        await req.logActivity('eliminar_parte', 'ParteRepuesto', req.params.id, { error: error.message }, 'FALLO');
-        res.status(500).json({ message: 'Error interno del servidor.', error: error.message });
+        console.error('Error al eliminar parte/repuesto:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
     }
 };
