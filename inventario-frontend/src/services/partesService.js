@@ -1,19 +1,6 @@
 // src/services/partesService.js
 import apiClient from './api';
 
-const buildFormData = (data, imagenFile) => {
-    const formData = new FormData();
-    for (const key in data) {
-        if (data[key] !== null && data[key] !== undefined) {
-            formData.append(key, data[key]);
-        }
-    }
-    if (imagenFile) {
-        formData.append('imagen', imagenFile);
-    }
-    return formData;
-};
-
 export default {
     getPartes(options) {
         const params = new URLSearchParams();
@@ -25,25 +12,22 @@ export default {
         }
         return apiClient.get('/partes-repuestos', { params });
     },
-
-    createParte(data, imagenFile) {
-        const formData = buildFormData(data, imagenFile);
-        return apiClient.post('/partes-repuestos', formData, {
+    createParte(data) {
+        return apiClient.post('/partes-repuestos', data);
+    },
+    updateParte(id, data) {
+        return apiClient.put(`/partes-repuestos/${id}`, data);
+    },
+    uploadImagen(id, imagenFile) {
+        const formData = new FormData();
+        formData.append('imagen', imagenFile);
+        return apiClient.put(`/partes-repuestos/${id}/upload`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
     },
-
-    updateParte(id, data, imagenFile) {
-        const formData = buildFormData(data, imagenFile);
-        return apiClient.put(`/partes-repuestos/${id}`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-        });
-    },
-
     deleteParte(id) {
         return apiClient.delete(`/partes-repuestos/${id}`);
     },
-
     getProveedoresList() {
         return apiClient.get('/proveedores/todos');
     }

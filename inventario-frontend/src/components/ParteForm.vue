@@ -28,7 +28,7 @@
             </v-col>
             <v-col cols="12">
               <v-file-input
-                v-model="imagenFile"
+                ref="fileInput"
                 label="Seleccionar Imagen o Documento"
                 accept="image/*,.pdf"
                 prepend-icon="mdi-camera"
@@ -58,16 +58,18 @@ const props = defineProps({
 });
 const emit = defineEmits(['close', 'save']);
 const parte = ref({});
-const imagenFile = ref([]);
 const form = ref(null);
+const fileInput = ref(null); // Referencia directa al componente v-file-input
 
 watch(() => props.item, (newItem) => {
   parte.value = { ...newItem };
-  imagenFile.value = [];
+  // Limpiamos el input de archivo al cambiar de ítem
+  if (fileInput.value) {
+    fileInput.value.reset();
+  }
 }, { immediate: true, deep: true });
 
 const formTitle = computed(() => parte.value.id ? 'Editar Parte' : 'Nueva Parte');
-
 const precioVentaCalculado = computed(() => {
   const precio = parseFloat(parte.value.precio_compra);
   const porcentaje = parseFloat(parte.value.porcentaje_ganancia);
@@ -86,7 +88,13 @@ const rules = {
 const validateAndSave = async () => {
   const { valid } = await form.value.validate();
   if (valid) {
-    emit('save', { parteData: parte.value, imagenFile: imagenFile.value[0] || null });
+    // --- LÓGICA CORREGIDA ---
+    // Leemos el archivo directamente desde la referencia del componente.
+    // .files es un arreglo que contiene los archivos seleccionados.
+    const imagenFile = fileInput.value.files[0] || null;
+    
+    console.log('🕵️‍♂️ [ESPÍA #1 - ParteForm.vue]: Archivo leído directamente del input ->', imagenFile);
+    emit('save', { parteData: parte.value, imagenFile: imagenFile });
   }
 };
 </script>
