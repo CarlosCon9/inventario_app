@@ -1,42 +1,58 @@
 /**
  * routes/proveedorRoutes.js
- * * Este archivo define los endpoints (rutas) para todo lo relacionado con los proveedores.
- * Su única responsabilidad es definir la ruta, el método HTTP y qué middlewares de seguridad y
- * función controladora se ejecutarán.
+ * Este archivo define los endpoints (rutas) para todo lo relacionado con los proveedores.
  */
 
 // --- 1. IMPORTACIONES ---
 const express = require('express');
 const router = express.Router();
-const proveedorController = require('../controllers/proveedorController'); // Importamos el controlador
-const { verifyAccessToken, authorizeRoles } = require('../utils/auth'); // Importamos los middlewares de seguridad
+
+// Importamos el controlador que contiene la lógica de negocio.
+const proveedorController = require('../controllers/proveedorController');
+
+// Importamos nuestro middleware de seguridad estandarizado.
+const { protect, authorizeRoles } = require('../middlewares/authMiddleware');
+
 
 // --- 2. DEFINICIÓN DE RUTAS ---
 
-// Ruta para crear un nuevo proveedor.
-// Solo 'administrador' y 'operador' pueden acceder.
-router.post('/', verifyAccessToken, authorizeRoles(['administrador', 'operador']), proveedorController.createProveedor);
+// Ruta para obtener la lista simple de proveedores (para formularios).
+// Esta ruta debe ir ANTES de las rutas con '/:id' para evitar conflictos.
+router.get(
+    '/todos', 
+    protect, 
+    authorizeRoles('administrador', 'operador'), 
+    proveedorController.getTodosLosProveedores
+);
 
-// Ruta para obtener la lista de todos los proveedores (con búsqueda y paginación).
-// Todos los usuarios autenticados pueden acceder.
-router.get('/', verifyAccessToken, authorizeRoles(['administrador', 'operador', 'consulta']), proveedorController.getAllProveedores);
+// Usamos el encadenamiento de rutas para las rutas principales.
+router.route('/')
+    // Obtener la lista paginada de todos los proveedores.
+    .get(
+        protect, 
+        authorizeRoles('administrador', 'operador', 'consulta'), 
+        proveedorController.getAllProveedores
+    )
+    // Crear un nuevo proveedor.
+    .post(
+        protect, 
+        authorizeRoles('administrador', 'operador'), 
+        proveedorController.createProveedor
+    );
 
-// --- RUTA NUEVA ---
-// Esta ruta debe ir ANTES de la ruta '/:id' para que no haya conflictos.
-router.get('/todos', verifyAccessToken, authorizeRoles('administrador', 'operador'), proveedorController.getTodosLosProveedores);
-
-// Ruta para obtener un proveedor específico por su ID.
-// Todos los usuarios autenticados pueden acceder.
-router.get('/:id', verifyAccessToken, authorizeRoles(['administrador', 'operador', 'consulta']), proveedorController.getProveedorById);
-
-// Ruta para actualizar un proveedor por su ID.
-// Solo 'administrador' y 'operador' pueden acceder.
-router.put('/:id', verifyAccessToken, authorizeRoles(['administrador', 'operador']), proveedorController.updateProveedor);
-
-// Ruta para eliminar un proveedor por su ID.
-// Solo 'administrador' puede acceder.
-router.delete('/:id', verifyAccessToken, authorizeRoles(['administrador']), proveedorController.deleteProveedor);
-
+router.route('/:id')
+    // Actualizar un proveedor por su ID.
+    .put(
+        protect, 
+        authorizeRoles('administrador', 'operador'), 
+        proveedorController.updateProveedor
+    )
+    // Eliminar un proveedor por su ID.
+    .delete(
+        protect, 
+        authorizeRoles('administrador'), 
+        proveedorController.deleteProveedor
+    );
 
 
 // --- 3. EXPORTACIÓN ---

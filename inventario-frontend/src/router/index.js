@@ -24,7 +24,11 @@ const routes = [
         name: 'Partes',
         component: () => import('@/views/PartesView.vue'),
       },
-      // Aquí añadiremos en el futuro las demás vistas internas...
+      {
+        path: 'proveedores',
+        name: 'Proveedores',
+        component: () => import('@/views/ProveedoresView.vue'),
+      }
     ]
   },
   {
@@ -44,7 +48,7 @@ const router = createRouter({
   routes
 });
 
-// El Guardia de Navegación se mantiene igual, no necesita cambios.
+// El Guardia de Navegación se mantiene igual
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
   if (!authStore.isAuthenticated && localStorage.getItem('token')) {
@@ -55,11 +59,14 @@ router.beforeEach((to, from, next) => {
 
   if (to.meta.requiresAuth && !isAuthenticated) {
     return next({ name: 'Login' });
-  } else if (to.name === 'Login' && isAuthenticated) {
+  } 
+  else if (to.name === 'Login' && isAuthenticated) {
     return next({ name: 'Dashboard' });
-  } else if (to.path === '/' && isAuthenticated) {
+  } 
+  else if (to.path === '/' && isAuthenticated) {
     return next({ name: 'Dashboard' });
-  } else {
+  }
+  else {
     next();
   }
 });
