@@ -1,28 +1,30 @@
-// middlewares/uploadMiddleware.js
+// middlewares/uploadManualMiddleware.js
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-const uploadDir = 'uploads/partes-imagenes/';
+const uploadDir = 'uploads/partes-manuales/';
 fs.mkdirSync(uploadDir, { recursive: true });
 
 const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif/;
-    const mimetype = allowedTypes.test(file.mimetype);
+    const allowedTypes = /pdf|doc|docx/;
+    const mimetype = file.mimetype === 'application/pdf' || 
+                   file.mimetype === 'application/msword' || 
+                   file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
     if (mimetype && extname) {
         return cb(null, true);
     }
-    cb(new Error('Tipo de archivo no soportado. Solo se permiten imágenes (jpeg, jpg, png, gif).'), false);
+    cb(new Error('Tipo de archivo no soportado. Solo se permiten documentos (pdf, doc, docx).'), false);
 };
 
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 1024 * 1024 * 5 }, // 5MB
+    limits: { fileSize: 1024 * 1024 * 10 }, // 10MB
     fileFilter: fileFilter
-}).single('imagen');
+}).single('manual');
 
 module.exports = (req, res, next) => {
     upload(req, res, function (err) {

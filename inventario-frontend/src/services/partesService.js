@@ -1,6 +1,5 @@
 // src/services/partesService.js
 import apiClient from './api';
-
 export default {
     getPartes(options) {
         const params = new URLSearchParams();
@@ -21,7 +20,14 @@ export default {
     uploadImagen(id, imagenFile) {
         const formData = new FormData();
         formData.append('imagen', imagenFile);
-        return apiClient.put(`/partes-repuestos/${id}/upload`, formData, {
+        return apiClient.put(`/partes-repuestos/${id}/upload-imagen`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+    },
+    uploadManual(id, manualFile) {
+        const formData = new FormData();
+        formData.append('manual', manualFile);
+        return apiClient.put(`/partes-repuestos/${id}/upload-manual`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
     },

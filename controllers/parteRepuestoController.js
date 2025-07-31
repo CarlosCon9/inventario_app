@@ -4,10 +4,11 @@ const { ParteRepuesto, Proveedor, MovimientoInventario, sequelize } = require('.
 const fs = require('fs');
 const path = require('path');
 
-const saveFile = (fileBuffer, parteId, originalName) => {
+const saveFile = (fileBuffer, parteId, originalName, subfolder) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const filename = `parte-${parteId}-${uniqueSuffix}${path.extname(originalName)}`;
-    const filePath = path.join('uploads/partes/', filename);
+    const prefix = subfolder === 'partes-manuales' ? 'manual' : 'parte';
+    const filename = `${prefix}-${parteId}-${uniqueSuffix}${path.extname(originalName)}`;
+    const filePath = path.join(`uploads/${subfolder}/`, filename);
     fs.writeFileSync(filePath, fileBuffer);
     return filePath.replace(/\\/g, "/");
 };
@@ -26,6 +27,7 @@ exports.createParteRepuesto = async (req, res) => {
     const t = await sequelize.transaction();
     try {
         const parteData = req.body;
+        parteData.cantidad = 0;
         parteData.precio_venta_sugerido = calcularPrecioVentaSugerido(parteData.precio_compra, parteData.porcentaje_ganancia);
         const nuevaParte = await ParteRepuesto.create(parteData, { transaction: t });
         await t.commit();
@@ -62,15 +64,9 @@ exports.uploadImagen = async (req, res) => {
     const t = await sequelize.transaction();
     try {
         const parte = await ParteRepuesto.findByPk(req.params.id, { transaction: t });
-        if (!parte) {
-            await t.rollback();
-            return res.status(404).json({ message: 'Parte/repuesto no encontrado.' });
-        }
-        if (!req.file) {
-            await t.rollback();
-            return res.status(400).json({ message: 'No se ha subido ningún archivo.' });
-        }
-        const imagePath = saveFile(req.file.buffer, parte.id, req.file.originalname);
+        if (!parte) { await t.rollback(); return res.status(404).json({ message: 'Parte/repuesto no encontrado.' }); }
+        if (!req.file) { await t.rollback(); return res.status(400).json({ message: 'No se ha subido ninguna imagen.' }); }
+        const imagePath = saveFile(req.file.buffer, parte.id, req.file.originalname, 'partes-imagenes');
         parte.imagen_url = imagePath;
         await parte.save({ transaction: t });
         await t.commit();
@@ -82,9 +78,27 @@ exports.uploadImagen = async (req, res) => {
     }
 };
 
+exports.uploadManual = async (req, res) => {
+    const t = await sequelize.transaction();
+    try {
+        const parte = await ParteRepuesto.findByPk(req.params.id, { transaction: t });
+        if (!parte) { await t.rollback(); return res.status(404).json({ message: 'Parte/repuesto no encontrado.' }); }
+        if (!req.file) { await t.rollback(); return res.status(400).json({ message: 'No se ha subido ningún manual.' }); }
+        const manualPath = saveFile(req.file.buffer, parte.id, req.file.originalname, 'partes-manuales');
+        parte.manual_url = manualPath;
+        await parte.save({ transaction: t });
+        await t.commit();
+        res.status(200).json(parte);
+    } catch (error) {
+        await t.rollback();
+        console.error('Error al subir manual:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+};
+
 exports.getAllPartesRepuestos = async (req, res) => {
     try {
-        const { page = 1, itemsPerPage = 10, sortBy = [], search = '' } = req.query;
+        const { page = 1, itemsPerPage = 10, sortBy = '[]', search = '' } = req.query;
         const options = {
             limit: parseInt(itemsPerPage, 10),
             offset: (parseInt(page, 10) - 1) * parseInt(itemsPerPage, 10),
@@ -92,8 +106,8 @@ exports.getAllPartesRepuestos = async (req, res) => {
             where: {},
             include: [{ model: Proveedor, as: 'proveedor', attributes: ['id', 'nombre'] }]
         };
-        if (sortBy && sortBy.length > 0) {
-            const parsedSortBy = typeof sortBy === 'string' ? JSON.parse(sortBy) : sortBy;
+        const parsedSortBy = JSON.parse(sortBy);
+        if (parsedSortBy && parsedSortBy.length > 0) {
             options.order = parsedSortBy.map(sort => [sort.key, sort.order ? sort.order.toUpperCase() : 'ASC']);
         } else {
             options.order.push(['nombre', 'ASC']);
@@ -102,33 +116,17 @@ exports.getAllPartesRepuestos = async (req, res) => {
             options.where = {
                 [Op.or]: [
                     { nombre: { [Op.iLike]: `%${search}%` } },
-                    { numero_parte: { [Op.iLike]: `%${search}%` } },
-                    { descripcion: { [Op.iLike]: `%${search}%` } }
+                    { numero_parte: { [Op.iLike]: `%${search}%` } }
                 ]
             };
         }
         const { count, rows } = await ParteRepuesto.findAndCountAll(options);
         res.status(200).json({ items: rows, totalItems: count });
     } catch (error) {
-        console.error('Error al obtener partes/repuestos:', error);
+        console.error('Error al obtener partes:', error);
         res.status(500).json({ message: 'Error interno del servidor.' });
     }
 };
-
-exports.getParteRepuestoById = async (req, res) => {
-    try {
-        const parte = await ParteRepuesto.findByPk(req.params.id, {
-            include: [{ model: Proveedor, as: 'proveedor' }]
-        });
-        if (!parte) {
-            return res.status(404).json({ message: 'Parte/repuesto no encontrado.' });
-        }
-        res.status(200).json(parte);
-    } catch (error) {
-        res.status(500).json({ message: 'Error interno del servidor.' });
-    }
-};
-
 exports.deleteParteRepuesto = async (req, res) => {
     const t = await sequelize.transaction();
     try {
@@ -148,6 +146,19 @@ exports.deleteParteRepuesto = async (req, res) => {
     } catch (error) {
         await t.rollback();
         console.error('Error al eliminar parte/repuesto:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+};
+exports.getParteRepuestoById = async (req, res) => {
+    try {
+        const parte = await ParteRepuesto.findByPk(req.params.id, {
+            include: [{ model: Proveedor, as: 'proveedor' }]
+        });
+        if (!parte) {
+            return res.status(404).json({ message: 'Parte/repuesto no encontrado.' });
+        }
+        res.status(200).json(parte);
+    } catch (error) {
         res.status(500).json({ message: 'Error interno del servidor.' });
     }
 };
