@@ -126,7 +126,15 @@ const loadItems = async (options) => {
     } catch (e) { console.error("Error al cargar partes:", e); } finally { loading.value = false; }
 };
 watch(search, () => { setTimeout(() => { if (tableOptions.value) loadItems(tableOptions.value); }, 500); });
-const getImageUrl = (path) => path ? `http://localhost:3000/${path.replace(/\\/g, "/")}` : null;
+
+const getImageUrl = (path) => {
+    if (!path) return null;
+    // Leemos la URL base del backend desde la variable de entorno y le añadimos la ruta de la imagen.
+    const baseUrl = import.meta.env.VITE_API_BASE_URL;
+    return `${baseUrl}/${path.replace(/\\/g, "/")}`;
+};
+
+
 const formatCurrency = (value) => value === null || value === undefined ? 'N/A' : new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(value);
 onMounted(loadProveedores);
 </script>

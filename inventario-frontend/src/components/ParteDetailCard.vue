@@ -56,12 +56,10 @@ const emit = defineEmits(['close']);
 // --- FUNCIÓN AÑADIDA Y CRUCIAL ---
 // Esta función construye la URL completa para mostrar la imagen desde el backend.
 const getImageUrl = (path) => {
-    // Si no hay ruta de imagen, podemos mostrar una imagen por defecto.
-    if (!path) {
-        return 'https://cdn.vuetifyjs.com/images/cards/sun-sky.jpg'; 
-    }
-    // Asume que tu backend corre en localhost:3000
-    return `http://localhost:3000/${path.replace(/\\/g, "/")}`;
+    if (!path) return 'https://cdn.vuetifyjs.com/images/cards/sun-sky.jpg'; // Imagen por defecto
+    // Leemos la URL base del backend desde la variable de entorno.
+    const baseUrl = import.meta.env.VITE_API_BASE_URL;
+    return `${baseUrl}/${path.replace(/\\/g, "/")}`;
 };
 
 // Esta función ya la tenías y es correcta.

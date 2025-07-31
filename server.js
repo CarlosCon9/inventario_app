@@ -102,8 +102,8 @@ async function startServer() {
         console.log('Las tablas han sido sincronizadas en el orden correcto.');
 
         // Iniciar el servidor Express
-        app.listen(PORT, () => {
-            console.log(`Servidor backend corriendo en http://localhost:${PORT}`);
+        app.listen(PORT, '0.0.0.0', () => {
+            console.log(`Servidor backend corriendo en http://localhost:${PORT} y en la red local`);
             // Puedes añadir la dirección IP para acceso local si es necesario, pero es opcional
             // console.log(`Accesible desde la red local en: http://[DIRECCION_IP_DEL_PC_DEDICADO]:${PORT}`);
         });

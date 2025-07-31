@@ -127,20 +127,47 @@ exports.getAllPartesRepuestos = async (req, res) => {
         res.status(500).json({ message: 'Error interno del servidor.' });
     }
 };
+
 exports.deleteParteRepuesto = async (req, res) => {
     const t = await sequelize.transaction();
     try {
+        // 1. Buscamos el registro que se va a eliminar para obtener las rutas de los archivos.
         const parte = await ParteRepuesto.findByPk(req.params.id, { transaction: t });
         if (!parte) {
             await t.rollback();
             return res.status(404).json({ message: 'Parte/repuesto no encontrado.' });
         }
+
+        // Guardamos las rutas de los archivos antes de borrar el registro.
+        const imagenPath = parte.imagen_url;
+        const manualPath = parte.manual_url;
+        
+        // 2. Verificamos si hay movimientos asociados.
         const movimientos = await MovimientoInventario.count({ where: { parte_repuesto_id: req.params.id } });
         if (movimientos > 0) {
              await t.rollback();
             return res.status(409).json({ message: `No se puede eliminar: la parte tiene ${movimientos} movimiento(s) de inventario asociados.` });
         }
+
+        // 3. Eliminamos el registro de la base de datos.
         await parte.destroy({ transaction: t });
+
+        // 4. Si la eliminación en la base de datos fue exitosa, borramos los archivos físicos.
+        if (imagenPath) {
+            // fs.unlink es el comando de Node.js para borrar un archivo.
+            fs.unlink(path.join(__dirname, '..', imagenPath), (err) => {
+                if (err) console.error(`Error al eliminar imagen ${imagenPath}:`, err);
+                else console.log(`Imagen eliminada: ${imagenPath}`);
+            });
+        }
+        if (manualPath) {
+            fs.unlink(path.join(__dirname, '..', manualPath), (err) => {
+                if (err) console.error(`Error al eliminar manual ${manualPath}:`, err);
+                else console.log(`Manual eliminado: ${manualPath}`);
+            });
+        }
+        
+        // 5. Confirmamos la transacción solo si todo ha ido bien.
         await t.commit();
         res.status(200).json({ message: 'Parte/repuesto eliminado exitosamente.' });
     } catch (error) {
@@ -149,6 +176,7 @@ exports.deleteParteRepuesto = async (req, res) => {
         res.status(500).json({ message: 'Error interno del servidor.' });
     }
 };
+
 exports.getParteRepuestoById = async (req, res) => {
     try {
         const parte = await ParteRepuesto.findByPk(req.params.id, {
