@@ -8,16 +8,10 @@ export default {
     getBajoStock() {
         return apiClient.get('/reportes/bajo-stock');
     },
-    // --- ASEGÚRATE DE QUE ESTA FUNCIÓN EXISTA ---
-    getValorInventario() {
-        return apiClient.get('/reportes/valor-inventario');
-    },
-
     /**
-     * Obtiene la lista de todos los items únicos (SKUs).
-     * @returns {Promise} La promesa de la petición de Axios.
+     * Obtiene la lista de los últimos movimientos de inventario.
      */
-    getListaItemsUnicos() {
-        return apiClient.get('/reportes/lista-items-unicos');
-    },
+    getMovimientosRecientes() {
+        return apiClient.get('/reportes/movimientos-recientes');
+    }
 };
