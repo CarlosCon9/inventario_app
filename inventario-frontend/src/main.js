@@ -12,8 +12,8 @@ import { useAuthStore } from '@/store/authStore';
 // Le decimos al navegador que elimine cualquier token o dato de usuario guardado.
 // Esto garantiza que cada vez que se reinicia el servidor o se abre la app
 // en una nueva sesión, se deba iniciar sesión de nuevo.
-localStorage.removeItem('token');
-localStorage.removeItem('user');
+//localStorage.removeItem('token');
+//localStorage.removeItem('user');
 // ----------------------------------------------------
 
 // 1. Crear las instancias de la app y de Pinia

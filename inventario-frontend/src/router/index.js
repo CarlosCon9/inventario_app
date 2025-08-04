@@ -41,6 +41,7 @@ const router = createRouter({
   routes
 });
 
+// Guardia de Navegación (nuestro "vigilante")
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
   if (!authStore.isAuthenticated && localStorage.getItem('token')) {
@@ -62,5 +63,15 @@ router.beforeEach((to, from, next) => {
     next();
   }
 });
+
+// --- TU MEJORA AÑADIDA (EL "SALVAVIDAS") ---
+router.onError((error) => {
+  const chunkFailedMessage = /Failed to fetch dynamically imported module|Loading chunk \d+ failed/;
+  if (chunkFailedMessage.test(error.message)) {
+    console.error('Error de carga de chunk detectado. Recargando la página...');
+    window.location.reload();
+  }
+});
+
 
 export default router;
