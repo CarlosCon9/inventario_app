@@ -100,9 +100,6 @@ const handleLogin = async () => {
         contrasena: password.value,
     });
 
-    // --- LÓGICA DE REDIRECCIÓN AÑADIDA ---
-    // Si la línea anterior no lanzó un error, el login fue exitoso.
-    // AHORA NOSOTROS, desde la vista, hacemos la redirección.
     router.push('/dashboard');
 
   } catch (error) {

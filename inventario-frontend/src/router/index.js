@@ -1,24 +1,18 @@
 // src/router/index.js
-
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/store/authStore';
 
 const routes = [
   {
-    // --- RUTA PADRE ---
-    // Esta ruta carga nuestro layout principal y protege todas las rutas hijas.
     path: '/',
     component: () => import('@/layouts/default.vue'),
     meta: { requiresAuth: true },
-    children: [ // <-- Las vistas internas van aquí dentro
+    children: [
       {
         path: 'dashboard',
         name: 'Dashboard',
         component: () => import('@/views/DashboardView.vue'),
       },
-      // --- RUTA CORREGIDA Y EN SU LUGAR CORRECTO ---
-      // Como es una ruta hija de '/', su path es relativo ('partes').
-      // Vue Router lo unirá para formar la URL completa '/partes'.
       {
         path: 'partes', 
         name: 'Partes',
@@ -32,7 +26,6 @@ const routes = [
     ]
   },
   {
-    // La ruta de Login es independiente y no usa el layout principal.
     path: '/login',
     name: 'Login',
     component: () => import('@/views/LoginView.vue'),
@@ -48,7 +41,6 @@ const router = createRouter({
   routes
 });
 
-// El Guardia de Navegación se mantiene igual
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
   if (!authStore.isAuthenticated && localStorage.getItem('token')) {

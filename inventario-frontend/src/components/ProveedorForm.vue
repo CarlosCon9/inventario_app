@@ -5,9 +5,9 @@
       <v-container>
         <v-form ref="form">
           <v-row>
-            <v-col cols="12"><v-text-field v-model="proveedor.nombre" label="Nombre del Proveedor *" :rules="[rules.required]"></v-text-field></v-col>
-            <v-col cols="12" sm="6"><v-text-field v-model="proveedor.contacto_principal" label="Contacto Principal"></v-text-field></v-col>
-            <v-col cols="12" sm="6"><v-text-field v-model="proveedor.telefono" label="Teléfono"></v-text-field></v-col>
+            <v-col cols="12"><v-text-field v-model="proveedor.nombre" label="Compañia *" :rules="[rules.required]"></v-text-field></v-col>
+            <v-col cols="12" sm="6"><v-text-field v-model="proveedor.contacto_principal" label="Contacto Principal *" :rules="[rules.required]"></v-text-field></v-col>
+            <v-col cols="12" sm="6"><v-text-field v-model="proveedor.telefono" label="Teléfono *" :rules="[rules.required]"></v-text-field></v-col>
             <v-col cols="12" sm="6"><v-text-field v-model="proveedor.correo_electronico" label="Correo Electrónico" :rules="[rules.email]"></v-text-field></v-col>
             <v-col cols="12" sm="6"><v-text-field v-model="proveedor.direccion" label="Dirección"></v-text-field></v-col>
           </v-row>
