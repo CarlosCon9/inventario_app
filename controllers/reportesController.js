@@ -76,8 +76,6 @@ exports.getMovimientosRecientes = async (req, res) => {
             include: [
                 {
                     model: ParteRepuesto,
-                    // --- CORRECCIÓN CLAVE ---
-                    // El alias debe coincidir exactamente con el definido en la asociación de modelos.
                     as: 'parteRepuesto', // Cambiado de 'parte_repuesto'
                     attributes: ['nombre']
                 },

@@ -40,6 +40,7 @@
           </v-card-text>
         </v-card>
       </v-col>
+
       <v-col v-if="visibility.valorVenta && authStore.userRole === 'administrador'" cols="12" sm="6" md="4">
         <v-card color="success" theme="dark" height="100%">
           <v-card-text class="d-flex align-center">
@@ -82,7 +83,7 @@
             <v-list-item
               v-for="mov in movimientosRecientes"
               :key="mov.id"
-              :title="mov.parte_repuesto?.nombre || 'Producto Eliminado'"
+              :title="mov.parteRepuesto?.nombre || 'Producto Eliminado'"
               :subtitle="`Realizado por: ${mov.usuario?.nombre_usuario || 'Usuario Eliminado'}`"
             >
               <template v-slot:prepend>
