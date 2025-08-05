@@ -5,6 +5,11 @@ const parteRepuestoController = require('../controllers/parteRepuestoController'
 const { protect, authorizeRoles } = require('../middlewares/authMiddleware');
 const uploadMiddleware = require('../middlewares/uploadMiddleware');
 const uploadManualMiddleware = require('../middlewares/uploadManualMiddleware');
+
+// --- RUTA NUEVA PARA BÚSQUEDA ---
+// Es importante que vaya ANTES de '/:id' para que no haya conflicto.
+router.get('/search', protect, authorizeRoles('administrador', 'operador'), parteRepuestoController.searchPartes);
+
 router.route('/')
     .get(protect, authorizeRoles('administrador', 'operador', 'consulta'), parteRepuestoController.getAllPartesRepuestos)
     .post(protect, authorizeRoles('administrador', 'operador'), parteRepuestoController.createParteRepuesto);

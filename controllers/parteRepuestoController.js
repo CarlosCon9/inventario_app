@@ -190,3 +190,26 @@ exports.getParteRepuestoById = async (req, res) => {
         res.status(500).json({ message: 'Error interno del servidor.' });
     }
 };
+
+exports.searchPartes = async (req, res) => {
+    try {
+        const { query } = req.query;
+        if (!query || query.length < 2) {
+            return res.status(200).json([]);
+        }
+        const partes = await ParteRepuesto.findAll({
+            where: {
+                [Op.or]: [
+                    { nombre: { [Op.iLike]: `%${query}%` } },
+                    { numero_parte: { [Op.iLike]: `%${query}%` } }
+                ]
+            },
+            limit: 10, // Limitamos a 10 resultados para un buen rendimiento
+            attributes: ['id', 'nombre', 'numero_parte', 'cantidad']
+        });
+        res.status(200).json(partes);
+    } catch (error) {
+        console.error('Error al buscar partes:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+};

@@ -40,7 +40,6 @@
           </v-card-text>
         </v-card>
       </v-col>
-
       <v-col v-if="visibility.valorVenta && authStore.userRole === 'administrador'" cols="12" sm="6" md="4">
         <v-card color="success" theme="dark" height="100%">
           <v-card-text class="d-flex align-center">
@@ -53,7 +52,7 @@
         </v-card>
       </v-col>
       
-      <v-col v-if="visibility.alertaBajoStock" cols="12" sm="12" md="4">
+     <v-col v-if="visibility.alertaBajoStock" cols="12" sm="12" md="4">
         <v-card height="100%">
           <v-card-title>
             <v-icon start color="warning">mdi-alert-circle-outline</v-icon>
@@ -83,19 +82,19 @@
             <v-list-item
               v-for="mov in movimientosRecientes"
               :key="mov.id"
-              :title="mov.parte_repuesto.nombre"
-              :subtitle="`Realizado por: ${mov.usuario.nombre_usuario}`"
+              :title="mov.parte_repuesto?.nombre || 'Producto Eliminado'"
+              :subtitle="`Realizado por: ${mov.usuario?.nombre_usuario || 'Usuario Eliminado'}`"
             >
               <template v-slot:prepend>
-                <v-avatar :color="mov.tipo_movimiento === 'entrada' ? 'success' : 'error'">
+                <v-avatar :color="mov.tipo_movimiento === 'entrada' ? 'success' : mov.tipo_movimiento === 'salida' ? 'error' : 'info'">
                   <v-icon color="white">
-                    {{ mov.tipo_movimiento === 'entrada' ? 'mdi-arrow-bottom-left' : 'mdi-arrow-top-right' }}
+                    {{ mov.tipo_movimiento === 'entrada' ? 'mdi-arrow-bottom-left' : mov.tipo_movimiento === 'salida' ? 'mdi-arrow-top-right' : 'mdi-wrench' }}
                   </v-icon>
                 </v-avatar>
               </template>
               <template v-slot:append>
                 <div class="text-right">
-                  <v-chip :color="mov.tipo_movimiento === 'entrada' ? 'success' : 'error'" class="mb-1">
+                  <v-chip :color="mov.tipo_movimiento === 'entrada' ? 'success' : mov.tipo_movimiento === 'salida' ? 'error' : 'info'" class="mb-1">
                     {{ mov.tipo_movimiento.toUpperCase() }}: {{ mov.cantidad_movimiento }}
                   </v-chip>
                   <div class="text-caption">{{ formatRelativeTime(mov.fecha_movimiento) }}</div>
@@ -129,7 +128,7 @@ const visibility = reactive({
 
 const formatCurrency = (value) => {
   if (isNaN(value)) return '$ 0';
-  return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
+  return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(value);
 };
 
 const formatRelativeTime = (dateString) => {

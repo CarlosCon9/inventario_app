@@ -13,21 +13,17 @@ module.exports = (sequelize, DataTypes) => {
             references: { model: 'usuarios', key: 'id' }
         },
         tipo_movimiento: {
-            // --- CAMPO ACTUALIZADO ---
-            // Añadimos los nuevos tipos de movimiento para ser más completos.
             type: DataTypes.ENUM('entrada', 'salida', 'ajuste', 'transferencia'),
             allowNull: false
         },
         cantidad_movimiento: {
             type: DataTypes.INTEGER,
             allowNull: false
-            // Quitamos la validación de min: 1 para permitir ajustes negativos.
         },
         descripcion_movimiento: {
             type: DataTypes.TEXT,
             allowNull: true
         },
-        // --- NUEVOS CAMPOS PARA TRANSFERENCIAS ---
         ubicacion_origen: {
             type: DataTypes.STRING(100),
             allowNull: true,

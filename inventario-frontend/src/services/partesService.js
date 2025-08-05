@@ -36,5 +36,9 @@ export default {
     },
     getProveedoresList() {
         return apiClient.get('/proveedores/todos');
+    },
+searchPartes(query) {
+        return apiClient.get('/partes-repuestos/search', { params: { query } });
     }
+    
 };

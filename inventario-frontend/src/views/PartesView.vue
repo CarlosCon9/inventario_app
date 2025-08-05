@@ -246,7 +246,6 @@ const saveItem = async ({ parteData, imagenFile, manualFile }) => {
     }
     if (uploadPromises.length > 0) {
       await Promise.all(uploadPromises);
-      showSnackbar('Parte/Repuesto creado exitosamente.');
     }
     closeDialog();
     loadItems(tableOptions.value);
