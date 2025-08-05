@@ -1,61 +1,41 @@
 // middlewares/authMiddleware.js
 const jwt = require('jsonwebtoken');
-const { Usuario } = require('../models'); // Para buscar el usuario en la DB si es necesario
+const { Usuario } = require('../models');
 
-const protect = async (req, res, next) => {
+exports.protect = async (req, res, next) => {
     let token;
-
-    // 1. Verificar si el token está presente en los headers de autorización
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-        try {
-            // Extraer el token del header "Bearer TOKEN"
-            token = req.headers.authorization.split(' ')[1];
-
-            // 2. Verificar el token usando el secreto JWT
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-            // 3. Buscar el usuario en la base de datos usando el ID del token
-            // Seleccionamos solo las propiedades que necesitamos y excluimos la contraseña
-            const user = await Usuario.findByPk(decoded.id, {
-                attributes: { exclude: ['contrasena'] }
-            });
-
-            if (!user) {
-                return res.status(401).json({ message: 'No autorizado, usuario del token no encontrado.' });
-            }
-
-            // 4. Adjuntar el objeto de usuario a la solicitud (req.user)
-            // Esto es crucial para que los controladores posteriores sepan quién es el usuario logueado
-            req.user = user;
-
-            // 5. Pasar al siguiente middleware/controlador
-            next();
-
-        } catch (error) {
-            // Si hay un error al verificar el token (ej. token inválido o expirado)
-            console.error('Error al verificar token JWT:', error);
-            if (error.name === 'TokenExpiredError') {
-                return res.status(401).json({ message: 'No autorizado, token ha expirado.' });
-            }
-            return res.status(401).json({ message: 'No autorizado, token inválido.' });
-        }
+        token = req.headers.authorization.split(' ')[1];
     }
-
     if (!token) {
-        // Si no se proporcionó ningún token
-        return res.status(401).json({ message: 'No autorizado, no hay token.' });
+        return res.status(401).json({ message: 'No autenticado, no hay token.' });
+    }
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        
+        const user = await Usuario.findByPk(decoded.id);
+
+        if (!user) {
+            return res.status(401).json({ message: 'Usuario no encontrado.' });
+        }
+
+        // VERIFICACIÓN DE SESIÓN ÚNICA
+        if (user.session_token !== decoded.sid || new Date(user.session_token_expires) < new Date()) {
+            return res.status(401).json({ message: 'La sesión ha expirado o se ha iniciado en otro dispositivo.' });
+        }
+
+        req.user = user;
+        next();
+    } catch (error) {
+        return res.status(401).json({ message: 'No autenticado, token inválido.' });
     }
 };
 
-// Middleware para verificar el rol del usuario (autorización)
-const authorizeRoles = (...roles) => {
+exports.authorizeRoles = (...roles) => {
     return (req, res, next) => {
-        if (!req.user || !roles.includes(req.user.rol)) {
-            // Si el usuario no tiene un rol permitido
-            return res.status(403).json({ message: `Acceso denegado. Rol requerido: ${roles.join(', ')}.` });
+        if (!roles.includes(req.user.rol)) {
+            return res.status(403).json({ message: 'No tienes permiso para realizar esta acción.' });
         }
         next();
     };
 };
-
-module.exports = { protect, authorizeRoles };

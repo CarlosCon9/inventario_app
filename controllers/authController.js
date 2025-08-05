@@ -3,11 +3,12 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { Usuario, sequelize, Sequelize } = require('../models');
 const sendEmail = require('../utils/email'); // Importamos nuestro servicio de email
+const bcrypt = require('bcryptjs');
 
 // Función de ayuda para generar el token JWT
-const generateToken = (user) => {
+const generateToken = (user, sessionId) => {
     return jwt.sign(
-        { id: user.id, rol: user.rol, nombre_usuario: user.nombre_usuario },
+        { id: user.id, rol: user.rol, sid: sessionId },
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRES_IN }
     );
@@ -39,18 +40,33 @@ exports.register = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
-    // Tu código de login existente va aquí...
     const { correo_electronico, contrasena } = req.body;
     try {
         const user = await Usuario.findOne({ where: { correo_electronico } });
+
+        // Usamos el método del modelo para la comparación, que es una mejor práctica.
         if (!user || !(await user.comparePassword(contrasena))) {
             return res.status(401).json({ message: 'Credenciales inválidas.' });
         }
         if (!user.activo) {
             return res.status(403).json({ message: 'Su cuenta está inactiva.' });
         }
-        const token = generateToken(user);
-        await req.logActivity('login_usuario', 'Autenticacion', user.id, {}, 'EXITO');
+
+        // 1. Generamos un nuevo y único token de sesión.
+        const sessionId = crypto.randomBytes(20).toString('hex');
+        
+        // 2. Calculamos la fecha de expiración.
+        const jwtExpiresInSeconds = 24 * 60 * 60; // 1 día
+        const sessionExpires = new Date(Date.now() + jwtExpiresInSeconds * 1000);
+
+        // 3. Guardamos el nuevo token de sesión en la base de datos.
+        user.session_token = sessionId;
+        user.session_token_expires = sessionExpires;
+        await user.save();
+        
+        // 4. Generamos el JWT, AHORA SÍ pasándole el sessionId.
+        const token = generateToken(user, sessionId);
+
         res.status(200).json({
             message: 'Inicio de sesión exitoso',
             token,
@@ -61,6 +77,7 @@ exports.login = async (req, res) => {
         res.status(500).json({ message: 'Error interno del servidor.' });
     }
 };
+
 
 
 // --- NUEVAS FUNCIONES PARA RECUPERAR CONTRASEÑA ---

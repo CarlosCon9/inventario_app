@@ -80,11 +80,10 @@
 <script setup>
 import { ref } from 'vue';
 import { useAuthStore } from '@/store/authStore';
-import { useRouter } from 'vue-router'; // <-- Importamos el router
+import { useRouter } from 'vue-router';
 
 const authStore = useAuthStore();
-const router = useRouter(); // <-- Obtenemos la instancia del router
-
+const router = useRouter();
 const correo = ref('');
 const password = ref('');
 const loading = ref(false);
@@ -94,16 +93,12 @@ const handleLogin = async () => {
   errorMessage.value = null;
   loading.value = true;
   try {
-    // Llamamos a la acción del store.
     await authStore.login({
         correo_electronico: correo.value,
         contrasena: password.value,
     });
-
     router.push('/dashboard');
-
   } catch (error) {
-    // El store nos lanza el error y aquí lo mostramos al usuario.
     errorMessage.value = error.response?.data?.message || 'Error al iniciar sesión.';
   } finally {
     loading.value = false;

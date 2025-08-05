@@ -2,33 +2,40 @@
 import axios from 'axios';
 import { useAuthStore } from '@/store/authStore';
 
-// Leemos la URL base de nuestro backend desde las variables de entorno.
-// Vite reemplazará 'import.meta.env.VITE_API_BASE_URL' con el valor de tu archivo .env.
-const baseURL = `${import.meta.env.VITE_API_BASE_URL}/api`;
-
 const apiClient = axios.create({
-    baseURL: baseURL
+    baseURL: `${import.meta.env.VITE_API_BASE_URL}/api`,
 });
 
-// Interceptor de Peticiones: Añade el token de autorización a cada llamada.
+// --- INTERCEPTOR DE PETICIONES A PRUEBA DE BALAS ---
 apiClient.interceptors.request.use(
     (config) => {
         const authStore = useAuthStore();
-        if (authStore.token) {
-            config.headers['Authorization'] = `Bearer ${authStore.token}`;
+        // Intentamos obtener el token desde el store reactivo de Pinia.
+        let token = authStore.token;
+
+        // --- LÓGICA DE RESPALDO (LA SOLUCIÓN) ---
+        // Si el token del store es nulo (posible durante la condición de carrera del login),
+        // intentamos leerlo directamente desde el localStorage, que es síncrono.
+        if (!token) {
+            token = localStorage.getItem('token');
+        }
+
+        // Si, después de ambas verificaciones, tenemos un token, lo añadimos a la cabecera.
+        if (token) {
+            config.headers['Authorization'] = `Bearer ${token}`;
         }
         return config;
     },
     (error) => Promise.reject(error)
 );
 
-// Interceptor de Respuestas: Maneja errores globales como un token expirado.
+// El interceptor de respuestas se mantiene igual, ya es robusto.
 apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response && error.response.status === 401) {
-            // Si el token es inválido, deslogueamos al usuario.
-            useAuthStore().logout();
+            const authStore = useAuthStore();
+            authStore.logout();
         }
         return Promise.reject(error);
     }
