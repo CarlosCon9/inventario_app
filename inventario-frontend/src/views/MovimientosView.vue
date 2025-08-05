@@ -1,7 +1,7 @@
 <template>
   <v-container fluid>
     <v-row justify="center">
-      <v-col cols="12" md="8" lg="6">
+      <v-col cols="12" md="10" lg="8">
         <v-card>
           <v-card-title class="d-flex align-center pa-4">
             <v-icon start>mdi-swap-horizontal</v-icon>
@@ -10,51 +10,64 @@
           <v-divider></v-divider>
           <v-card-text>
             <v-form ref="form">
-              <v-autocomplete
-                v-model="selectedParte"
-                :items="partesEncontradas"
-                :loading="isSearching"
-                @update:search="buscarPartes"
-                item-title="nombre"
-                item-value="id"
-                label="Buscar Parte o Repuesto (por nombre o N/P)"
-                placeholder="Empieza a escribir para buscar..."
-                return-object
-                clearable
-                :rules="[rules.requiredObject]"
-              >
-                <template v-slot:item="{ props, item }">
-                  <v-list-item 
-                    v-bind="props" 
-                    :subtitle="`N/P: ${item.raw.numero_parte} - Stock Actual: ${item.raw.cantidad}`"
-                  ></v-list-item>
-                </template>
-              </v-autocomplete>
-              
-              <v-select
-                v-model="movimiento.tipo_movimiento"
-                :items="tiposDeMovimiento"
-                label="Tipo de Movimiento"
-                :rules="[rules.required]"
-              ></v-select>
+              <v-row>
+                <v-col cols="12">
+                  <v-autocomplete
+                    v-model="selectedParte"
+                    :items="partesEncontradas"
+                    :loading="isSearching"
+                    @update:search="buscarPartes"
+                    item-title="nombre"
+                    item-value="id"
+                    label="Buscar Parte o Repuesto (por nombre o N/P)"
+                    placeholder="Empieza a escribir para buscar..."
+                    return-object
+                    clearable
+                    variant="outlined"
+                    :rules="[rules.requiredObject]"
+                  >
+                    <template v-slot:item="{ props, item }">
+                      <v-list-item 
+                        v-bind="props" 
+                        :subtitle="`N/P: ${item.raw.numero_parte} - Stock Actual: ${item.raw.cantidad}`"
+                      ></v-list-item>
+                    </template>
+                  </v-autocomplete>
+                </v-col>
 
-              <v-text-field
-                v-model.number="movimiento.cantidad_movimiento"
-                label="Cantidad a Mover"
-                type="number"
-                :rules="[rules.required, rules.positive]"
-              ></v-text-field>
+                <v-col cols="12" sm="6">
+                  <v-select
+                    v-model="movimiento.tipo_movimiento"
+                    :items="tiposDeMovimiento"
+                    label="Tipo de Movimiento"
+                    variant="outlined"
+                    :rules="[rules.required]"
+                  ></v-select>
+                </v-col>
+                <v-col cols="12" sm="6">
+                  <v-text-field
+                    v-model.number="movimiento.cantidad_movimiento"
+                    label="Cantidad a Mover"
+                    type="number"
+                    variant="outlined"
+                    :rules="[rules.required, rules.positive]"
+                  ></v-text-field>
+                </v-col>
 
-              <v-textarea
-                v-model="movimiento.descripcion_movimiento"
-                label="Descripción o Motivo (ej. Factura N° 123, Venta a cliente, etc.)"
-                rows="3"
-              ></v-textarea>
+                <v-col cols="12">
+                  <v-textarea
+                    v-model="movimiento.descripcion_movimiento"
+                    label="Descripción o Motivo (ej. Factura N° 123, Venta a cliente, etc.)"
+                    rows="3"
+                    variant="outlined"
+                  ></v-textarea>
+                </v-col>
+              </v-row>
             </v-form>
           </v-card-text>
           <v-card-actions class="pa-4">
             <v-spacer></v-spacer>
-            <v-btn color="primary" @click="registrarMovimiento" :loading="isSaving">
+            <v-btn size="large" color="primary" @click="registrarMovimiento" :loading="isSaving">
               Registrar Movimiento
             </v-btn>
           </v-card-actions>
