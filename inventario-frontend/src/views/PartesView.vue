@@ -7,7 +7,7 @@
         <v-spacer></v-spacer>
         <v-text-field
           v-model="search"
-          label="Buscar..."
+          label="Nombre, N/P, Descripción..."
           prepend-inner-icon="mdi-magnify"
           variant="outlined"
           density="compact"
@@ -16,6 +16,7 @@
           style="max-width: 400px;"
         ></v-text-field>
         <v-btn color="primary" class="ml-4" @click="openNewItemDialog">
+          <v-icon start>mdi-plus</v-icon>
           Añadir Parte
         </v-btn>
       </v-card-title>
@@ -37,7 +38,7 @@
             <v-img :src="getImageUrl(item.imagen_url)" cover>
               <template v-slot:placeholder>
                 <div class="d-flex align-center justify-center fill-height">
-                  <v-icon>mdi-image-off</v-icon>
+                 <v-icon color="grey-lighten-1">mdi-image-off</v-icon>
                 </div>
               </template>
             </v-img>
@@ -57,7 +58,7 @@
             <v-icon start>mdi-file-pdf-box</v-icon>
             Ver
           </v-chip>
-          <span v-else>N/A</span>
+          <span v-else>Sin documento</span>
         </template>
 
         <template v-slot:item.actions="{ item }">
@@ -84,6 +85,7 @@
     <v-dialog v-model="dialogDelete" max-width="500px">
       <v-card>
         <v-card-title class="text-h5">¿Estás seguro?</v-card-title>
+        <v-card-text>Esta acción eliminará permanentemente el ítem. No se puede deshacer.</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn @click="closeDeleteDialog">Cancelar</v-btn>
@@ -101,7 +103,7 @@
         <v-img :src="imageUrlToView" max-height="80vh" contain></v-img>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" @click="imageDialog = false">Cerrar</v-btn>
+          <v-btn color="primary" text @click="imageDialog = false">Cerrar</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -111,6 +113,7 @@
       :color="snackbar.color"
       :timeout="4000"
       location="top right"
+      multi-line
     >
       {{ snackbar.text }}
       <template v-slot:actions>
@@ -139,15 +142,15 @@ const itemToDelete = ref(null);
 const proveedoresList = ref([]);
 const itemsPerPage = ref(10);
 const headers = ref([
-  { title: 'Imagen', key: 'imagen_url', sortable: false },
-  { title: 'Nombre', key: 'nombre' },
-  { title: 'N/P', key: 'numero_parte' },
+  { title: 'Imagen', key: 'imagen_url', sortable: false, align:'center' },
+  { title: 'Nombre', key: 'nombre', align:'start' },
+  { title: 'N/P', key: 'numero_parte', align:'start'},
   { title: 'Proveedor', key: 'proveedor.nombre', sortable: false },
-  { title: 'Stock', key: 'cantidad' },
-  { title: 'Precio Compra', key: 'precio_compra' },
-  { title: 'Precio Venta', key: 'precio_venta_sugerido' },
-  { title: 'Datasheet', key: 'manual_url', sortable: false },
-  { title: 'Acciones', key: 'actions', sortable: false },
+  { title: 'Stock', key: 'cantidad', align:'start' },
+  { title: 'Precio Compra', key: 'precio_compra', align:'start' },
+  { title: 'Precio Venta', key: 'precio_venta_sugerido', align:'start' },
+  { title: 'Datasheet', key: 'manual_url', sortable: false, align:'start' },
+  { title: 'Acciones', key: 'actions', sortable: false , align:'start'},
 ]);
 const serverItems = ref([]);
 const loading = ref(true);
