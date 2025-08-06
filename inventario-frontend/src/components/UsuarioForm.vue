@@ -43,7 +43,7 @@ const form = ref(null);
 const roles = ['administrador', 'operador', 'consulta'];
 
 watch(() => props.item, (newItem) => {
-  console.log('🕵️‍♂️ [ESPÍA #2 - UsuarioForm.vue]: Recibiendo nuevo item del padre ->', newItem);
+ 
   usuario.value = { ...newItem };
   delete usuario.value.contrasena;
 }, { immediate: true });
@@ -61,8 +61,7 @@ const validateAndSave = async () => {
     if (isEditing.value && !dataToSend.contrasena) {
       delete dataToSend.contrasena;
     }
-    console.log('🕵️‍♂️ [ESPÍA #2 - UsuarioForm.vue]: Emitiendo evento "save" con datos ->', dataToSend);
-    emit('save', dataToSend);
+       emit('save', dataToSend);
   }
 };
 </script>

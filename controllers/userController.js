@@ -34,8 +34,7 @@ exports.getAllUsuarios = async (req, res) => {
 };
 
 exports.createUsuario = async (req, res) => {
-    console.log('🕵️‍♂️ [ESPÍA #5 - userController]: Petición para CREAR usuario recibida. Body:', req.body);
-    try {
+        try {
         const { nombre_usuario, correo_electronico, contrasena, rol, activo } = req.body;
         if (!contrasena) {
             return res.status(400).json({ message: 'La contraseña es obligatoria al crear un usuario.' });
@@ -53,7 +52,7 @@ exports.createUsuario = async (req, res) => {
 };
 
 exports.updateUsuario = async (req, res) => {
-    console.log(`🕵️‍♂️ [ESPÍA #5 - userController]: Petición para ACTUALIZAR usuario ID: ${req.params.id}. Body:`, req.body);
+    
     try {
         const { contrasena, ...datosActualizar } = req.body;
         const usuario = await Usuario.findByPk(req.params.id);
@@ -77,7 +76,7 @@ exports.updateUsuario = async (req, res) => {
 };
 
 exports.deleteUsuario = async (req, res) => {
-    console.log(`🕵️‍♂️ [ESPÍA #5 - userController]: Petición para DESACTIVAR usuario ID: ${req.params.id}.`);
+    
     try {
         const usuario = await Usuario.findByPk(req.params.id);
         if (!usuario) {
