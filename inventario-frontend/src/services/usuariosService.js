@@ -13,15 +13,14 @@ export default {
         return apiClient.get('/usuarios', { params });
     },
     createUsuario(data) {
-        console.log('🕵️‍♂️ [ESPÍA #4 - usuariosService]: Enviando petición POST a /usuarios con datos:', data);
+        
         return apiClient.post('/usuarios', data);
     },
     updateUsuario(id, data) {
-        console.log(`🕵️‍♂️ [ESPÍA #4 - usuariosService]: Enviando petición PUT a /usuarios/${id} con datos:`, data);
+        
         return apiClient.put(`/usuarios/${id}`, data);
     },
     deleteUsuario(id) {
-        console.log(`🕵️‍♂️ [ESPÍA #4 - usuariosService]: Enviando petición DELETE a /usuarios/${id}`);
-        return apiClient.delete(`/usuarios/${id}`);
+                return apiClient.delete(`/usuarios/${id}`);
     }
 };
