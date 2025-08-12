@@ -16,7 +16,7 @@ const sendEmail = async (options) => {
 
     // 2. Definir las opciones del correo
     const mailOptions = {
-        from: `Gestor de Inventario <${process.env.EMAIL_FROM}>`,
+        from: `Inventario App <${process.env.EMAIL_FROM}>`,
         to: options.to,
         subject: options.subject,
         html: options.html

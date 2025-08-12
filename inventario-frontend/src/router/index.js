@@ -49,6 +49,12 @@ const routes = [
     component: LoginView, // Usamos el componente ya importado
   },
   {
+    path: "/reset-password/:token",
+    name: "ResetPassword",
+    component: () => import("@/views/ResetPasswordView.vue"),
+  },
+
+  {
     path: "/:pathMatch(.*)*",
     redirect: "/login",
   },
