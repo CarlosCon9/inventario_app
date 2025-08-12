@@ -8,6 +8,10 @@ const uploadManualMiddleware = require('../middlewares/uploadManualMiddleware');
 
 // --- RUTA NUEVA PARA BÚSQUEDA ---
 // Es importante que vaya ANTES de '/:id' para que no haya conflicto.
+const spyMiddleware = (req, res, next) => {
+    console.log(`🕵️‍♂️ [ESPÍA #3 - Backend]: Ruta GET /search alcanzada con la consulta:`, req.query);
+    next();
+};
 router.get('/search', protect, authorizeRoles('administrador', 'operador'), parteRepuestoController.searchPartes);
 
 router.route('/')

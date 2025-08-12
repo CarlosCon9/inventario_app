@@ -13,7 +13,7 @@
           density="compact"
           hide-details
           single-line
-          style="max-width: 400px;"
+          style="max-width: 400px"
         ></v-text-field>
         <v-btn color="primary" class="ml-4" @click="openNewItemDialog">
           <v-icon start>mdi-plus</v-icon>
@@ -34,11 +34,16 @@
         @click:row="(_, { item }) => openDetailDialog(item)"
       >
         <template v-slot:item.imagen_url="{ item }">
-          <v-avatar size="40" class="my-2" style="cursor: pointer;" @click.stop="openImageDialog(item)">
+          <v-avatar
+            size="40"
+            class="my-2"
+            style="cursor: pointer"
+            @click.stop="openImageDialog(item)"
+          >
             <v-img :src="getImageUrl(item.imagen_url)" cover>
               <template v-slot:placeholder>
                 <div class="d-flex align-center justify-center fill-height">
-                 <v-icon color="grey-lighten-1">mdi-image-off</v-icon>
+                  <v-icon color="grey-lighten-1">mdi-image-off</v-icon>
                 </div>
               </template>
             </v-img>
@@ -48,13 +53,23 @@
         <template v-slot:item.precio_compra="{ value }">
           {{ formatCurrency(value) }}
         </template>
-        
+
         <template v-slot:item.precio_venta_sugerido="{ value }">
           {{ formatCurrency(value) }}
         </template>
 
+        <template v-slot:item.precio_referencia="{ value }">
+          {{ formatCurrency(value) }}
+        </template>
+
         <template v-slot:item.manual_url="{ item }">
-          <v-chip v-if="item.manual_url" color="info" variant="tonal" size="small" @click.stop="openManual(item)">
+          <v-chip
+            v-if="item.manual_url"
+            color="info"
+            variant="tonal"
+            size="small"
+            @click.stop="openManual(item)"
+          >
             <v-icon start>mdi-file-pdf-box</v-icon>
             Ver
           </v-chip>
@@ -65,12 +80,23 @@
           <div v-if="authStore.userRole === 'administrador'">
             <v-tooltip text="Editar">
               <template v-slot:activator="{ props }">
-                <v-icon v-bind="props" class="me-2" size="small" @click.stop="openEditItemDialog(item)">mdi-pencil</v-icon>
+                <v-icon
+                  v-bind="props"
+                  class="me-2"
+                  size="small"
+                  @click.stop="openEditItemDialog(item)"
+                  >mdi-pencil</v-icon
+                >
               </template>
             </v-tooltip>
             <v-tooltip text="Eliminar">
               <template v-slot:activator="{ props }">
-                <v-icon v-bind="props" size="small" @click.stop="openDeleteItemDialog(item)">mdi-delete</v-icon>
+                <v-icon
+                  v-bind="props"
+                  size="small"
+                  @click.stop="openDeleteItemDialog(item)"
+                  >mdi-delete</v-icon
+                >
               </template>
             </v-tooltip>
           </div>
@@ -79,13 +105,21 @@
     </v-card>
 
     <v-dialog v-model="dialog" max-width="900px" persistent>
-      <ParteForm :item="editedItem" :proveedores="proveedoresList" @close="closeDialog" @save="saveItem" />
+      <ParteForm
+        :item="editedItem"
+        :proveedores="proveedoresList"
+        @close="closeDialog"
+        @save="saveItem"
+      />
     </v-dialog>
 
     <v-dialog v-model="dialogDelete" max-width="500px">
       <v-card>
         <v-card-title class="text-h5">¿Estás seguro?</v-card-title>
-        <v-card-text>Esta acción eliminará permanentemente el ítem. No se puede deshacer.</v-card-text>
+        <v-card-text
+          >Esta acción eliminará permanentemente el ítem. No se puede
+          deshacer.</v-card-text
+        >
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn @click="closeDeleteDialog">Cancelar</v-btn>
@@ -103,7 +137,9 @@
         <v-img :src="imageUrlToView" max-height="80vh" contain></v-img>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" text @click="imageDialog = false">Cerrar</v-btn>
+          <v-btn color="primary" text @click="imageDialog = false"
+            >Cerrar</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -124,47 +160,52 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch, onMounted } from 'vue';
-import partesService from '@/services/partesService';
-import ParteForm from '@/components/ParteForm.vue';
-import ParteDetailCard from '@/components/ParteDetailCard.vue';
-import { useAuthStore } from '@/store/authStore';
+import { ref, reactive, watch, onMounted } from "vue";
+import partesService from "@/services/partesService";
+import ParteForm from "@/components/ParteForm.vue";
+import ParteDetailCard from "@/components/ParteDetailCard.vue";
+import { useAuthStore } from "@/store/authStore";
 
 const authStore = useAuthStore();
 const dialog = ref(false);
 const dialogDelete = ref(false);
 const dialogDetail = ref(false);
 const imageDialog = ref(false);
-const imageUrlToView = ref('');
+const imageUrlToView = ref("");
 const editedItem = ref({});
 const selectedItem = ref({});
 const itemToDelete = ref(null);
 const proveedoresList = ref([]);
 const itemsPerPage = ref(10);
+
 const headers = ref([
-  { title: 'Imagen', key: 'imagen_url', sortable: false, align:'center' },
-  { title: 'Nombre', key: 'nombre', align:'start' },
-  { title: 'N/P', key: 'numero_parte', align:'start'},
-  { title: 'Proveedor', key: 'proveedor.nombre', sortable: false },
-  { title: 'Stock', key: 'cantidad', align:'start' },
-  { title: 'Precio Compra', key: 'precio_compra', align:'start' },
-  { title: 'Precio Venta', key: 'precio_venta_sugerido', align:'start' },
-  { title: 'Datasheet', key: 'manual_url', sortable: false, align:'start' },
-  { title: 'Acciones', key: 'actions', sortable: false , align:'start'},
+  { title: "Imagen", key: "imagen_url", sortable: false },
+  { title: "Nombre", key: "nombre" },
+  { title: "N/P", key: "numero_parte" },
+  { title: "Stock Mínimo", key: "cantidad_minima", align: "center" },
+  { title: "Stock", key: "cantidad", align: "end" },
+  { title: "Estand", key: "estand", align: "center" },
+  { title: "Fila", key: "fila", align: "center" },
+  { title: "Precio Compra", key: "precio_compra" },
+  { title: "Precio Referencia", key: "precio_referencia" },
+  { title: "Precio Venta", key: "precio_venta_sugerido" },
+  { title: "Datasheet", key: "manual_url", sortable: false, align: "center" },
+  { title: "Acciones", key: "actions", sortable: false, align: "center" },
 ]);
+
 const serverItems = ref([]);
 const loading = ref(true);
 const totalItems = ref(0);
-const search = ref('');
+const search = ref("");
 const tableOptions = ref({});
 
 const snackbar = reactive({
   show: false,
-  text: '',
-  color: 'success',
+  text: "",
+  color: "success",
 });
 
-const showSnackbar = (text, color = 'success') => {
+const showSnackbar = (text, color = "success") => {
   snackbar.text = text;
   snackbar.color = color;
   snackbar.show = true;
@@ -179,7 +220,7 @@ const openImageDialog = (item) => {
 
 const openManual = (item) => {
   if (item && item.manual_url) {
-    window.open(getImageUrl(item.manual_url), '_blank');
+    window.open(getImageUrl(item.manual_url), "_blank");
   }
 };
 
@@ -233,11 +274,14 @@ const saveItem = async ({ parteData, imagenFile, manualFile }) => {
   try {
     let savedItemResponse;
     if (parteData.id) {
-      savedItemResponse = await partesService.updateParte(parteData.id, parteData);
-      showSnackbar('Parte/Repuesto actualizado exitosamente.');
+      savedItemResponse = await partesService.updateParte(
+        parteData.id,
+        parteData
+      );
+      showSnackbar("Parte/Repuesto actualizado exitosamente.");
     } else {
       savedItemResponse = await partesService.createParte(parteData);
-      showSnackbar('Parte/Repuesto creado exitosamente.');
+      showSnackbar("Parte/Repuesto creado exitosamente.");
     }
     const savedItemId = savedItemResponse.data.id;
     const uploadPromises = [];
@@ -254,7 +298,10 @@ const saveItem = async ({ parteData, imagenFile, manualFile }) => {
     loadItems(tableOptions.value);
   } catch (error) {
     console.error("Error al guardar:", error);
-    showSnackbar(error.response?.data?.message || 'Error al guardar el ítem', 'error');
+    showSnackbar(
+      error.response?.data?.message || "Error al guardar el ítem",
+      "error"
+    );
   }
 };
 
@@ -262,13 +309,16 @@ const deleteItemConfirm = async () => {
   try {
     if (itemToDelete.value && itemToDelete.value.id) {
       await partesService.deleteParte(itemToDelete.value.id);
-      showSnackbar('Ítem eliminado exitosamente.');
+      showSnackbar("Ítem eliminado exitosamente.");
     }
     closeDeleteDialog();
     loadItems(tableOptions.value);
   } catch (error) {
     console.error("Error al eliminar:", error);
-    showSnackbar(error.response?.data?.message || 'Error al eliminar el ítem', 'error');
+    showSnackbar(
+      error.response?.data?.message || "Error al eliminar el ítem",
+      "error"
+    );
     closeDeleteDialog();
   }
 };
@@ -277,12 +327,15 @@ const loadItems = async (options) => {
   tableOptions.value = options;
   loading.value = true;
   try {
-    const res = await partesService.getPartes({ ...options, search: search.value });
+    const res = await partesService.getPartes({
+      ...options,
+      search: search.value,
+    });
     serverItems.value = res.data.items;
     totalItems.value = res.data.totalItems;
   } catch (e) {
     console.error("Error al cargar partes:", e);
-    showSnackbar('Error al cargar la lista de partes', 'error');
+    showSnackbar("Error al cargar la lista de partes", "error");
   } finally {
     loading.value = false;
   }
@@ -301,11 +354,11 @@ const getImageUrl = (path) => {
 };
 
 const formatCurrency = (value) => {
-  if (value === null || value === undefined) return 'N/A';
-  return new Intl.NumberFormat('es-CO', {
-    style: 'currency',
-    currency: 'COP',
-    minimumFractionDigits: 0
+  if (value === null || value === undefined) return "N/A";
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    minimumFractionDigits: 0,
   }).format(value);
 };
 

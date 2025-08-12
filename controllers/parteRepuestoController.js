@@ -192,11 +192,16 @@ exports.getParteRepuestoById = async (req, res) => {
 };
 
 exports.searchPartes = async (req, res) => {
+    console.log('🕵️‍♂️ [ESPÍA #4 - Backend]: El Controlador searchPartes fue alcanzado.');
     try {
         const { query } = req.query;
+        console.log(`🕵️‍♂️ [ESPÍA #4 - Backend]: Término de búsqueda recibido: "${query}"`);
+
         if (!query || query.length < 2) {
+            console.log('🕵️‍♂️ [ESPÍA #4 - Backend]: Búsqueda muy corta, devolviendo arreglo vacío.');
             return res.status(200).json([]);
         }
+
         const partes = await ParteRepuesto.findAll({
             where: {
                 [Op.or]: [
@@ -204,12 +209,14 @@ exports.searchPartes = async (req, res) => {
                     { numero_parte: { [Op.iLike]: `%${query}%` } }
                 ]
             },
-            limit: 10, // Limitamos a 10 resultados para un buen rendimiento
+            limit: 10,
             attributes: ['id', 'nombre', 'numero_parte', 'cantidad']
         });
+
+        console.log(`🕵️‍♂️ [ESPÍA #4 - Backend]: Búsqueda en DB encontró ${partes.length} resultados. Enviando al frontend.`);
         res.status(200).json(partes);
     } catch (error) {
-        console.error('Error al buscar partes:', error);
+        console.error('🕵️‍♂️ [ESPÍA #4 - Backend]: ¡ERROR! Error al buscar partes:', error);
         res.status(500).json({ message: 'Error interno del servidor.' });
     }
 };
