@@ -35,4 +35,7 @@ export default defineConfig({
     port: 5173,
     host: true, // Permite el acceso desde la red local
   },
+  optimizeDeps: {
+    include: ['vuetify', 'vuetify/components', 'vuetify/directives'], // 👈 añadido
+  },
 })

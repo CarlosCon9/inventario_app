@@ -1,11 +1,6 @@
 // controllers/reportesController.js
 const { Op, Sequelize } = require("sequelize");
-const {
-  ParteRepuesto,
-  Proveedor,
-  MovimientoInventario,
-  Usuario,
-} = require("../models");
+const { ParteRepuesto, Proveedor, MovimientoInventario, Usuario } = require("../models");
 const xlsx = require("xlsx");
 
 exports.getDashboardStats = async (req, res) => {
@@ -116,43 +111,44 @@ exports.getMovimientosRecientes = async (req, res) => {
  * @description Genera un reporte de partes con stock bajo o igual al mínimo.
  */
 exports.getReporteStockBajoDetallado = async (req, res) => {
-    try {
-        const items = await ParteRepuesto.findAll({
-            where: {
-                cantidad: { [Op.lte]: Sequelize.col('cantidad_minima') },
-                cantidad_minima: { [Op.gt]: 0 },
-                activo: true
-            },
-            attributes: ['nombre', ['numero_parte', 'N/P'], ['cantidad', 'Cantidad Actual'], ['cantidad_minima', 'Cantidad Mínima']],
-            order: [['nombre', 'ASC']],
-            raw: true
-        });
+  try {
+    const items = await ParteRepuesto.findAll({
+      where: {
+        cantidad: { [Op.lte]: Sequelize.col("cantidad_minima") },
+        cantidad_minima: { [Op.gt]: 0 },
+        activo: true,
+      },
+      attributes: [
+        "nombre",
+        ["numero_parte", "N/P"],
+        ["cantidad", "Cantidad Actual"],
+        ["cantidad_minima", "Cantidad Mínima"],
+      ],
+      order: [["nombre", "ASC"]],
+      raw: true,
+    });
 
-        if (req.query.export === 'excel') {
-            const worksheet = xlsx.utils.json_to_sheet(items);
-            const workbook = xlsx.utils.book_new();
-            xlsx.utils.book_append_sheet(workbook, worksheet, 'Stock Bajo');
-            const buffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
-            res.header('Content-Disposition', 'attachment; filename="Reporte_Stock_Bajo.xlsx"');
-            return res.send(buffer);
-        }
-        res.status(200).json(items);
-    } catch (error) {
-        res.status(500).json({ message: 'Error al generar reporte de stock bajo.' });
+    if (req.query.export === "excel") {
+      const worksheet = xlsx.utils.json_to_sheet(items);
+      const workbook = xlsx.utils.book_new();
+      xlsx.utils.book_append_sheet(workbook, worksheet, "Stock Bajo");
+      const buffer = xlsx.write(workbook, { type: "buffer", bookType: "xlsx" });
+      res.header(
+        "Content-Disposition",
+        'attachment; filename="Reporte_Stock_Bajo.xlsx"'
+      );
+      return res.send(buffer);
     }
+    res.status(200).json(items);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error al generar reporte de stock bajo." });
+  }
 };
 
-
-/**
- * @controller getReporteInventarioCompleto
- * @description Genera un reporte completo del inventario.
- */
-/**
- * @controller getReporteInventarioCompleto
- * @description Genera un reporte completo del inventario.
- */
 exports.getReporteInventarioCompleto = async (req, res) => {
-    try {
+   try {
         const items = await ParteRepuesto.findAll({
             where: { activo: true },
             attributes: [
@@ -177,52 +173,97 @@ exports.getReporteInventarioCompleto = async (req, res) => {
             'Precio de Referencia': item.precio_referencia
         }));
 
-        if (req.query.export === 'excel') {
-            const worksheet = xlsx.utils.json_to_sheet(formattedItemsForExcel);
-            const workbook = xlsx.utils.book_new();
-            xlsx.utils.book_append_sheet(workbook, worksheet, 'Inventario Completo');
-            const buffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
-            res.header('Content-Disposition', 'attachment; filename="Reporte_Inventario_Completo.xlsx"');
-            return res.send(buffer);
+
+    if (req.query.export === "excel") {
+      const worksheet = xlsx.utils.json_to_sheet(items);
+
+      // --- LÓGICA PARA APLICAR FORMATO DE MONEDA ---
+      const range = xlsx.utils.decode_range(worksheet["!ref"]);
+      for (let R = range.s.r + 1; R <= range.e.r; ++R) {
+        // Itera sobre las filas, saltando la cabecera
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          // Itera sobre las columnas
+          const cell_address = { c: C, r: R };
+          const cell_ref = xlsx.utils.encode_cell(cell_address);
+          const cell = worksheet[cell_ref];
+
+          // Si la celda corresponde a una de las columnas de precio y es un número...
+          if (cell && cell.t === "n" && (C === 3 || C === 4 || C === 5)) {
+            // Columnas D, E, F
+            cell.t = "n"; // Asegura que el tipo sea numérico
+            cell.z = "$ #,##0"; // Formato de moneda sin decimales
+          }
         }
-        // Enviamos los datos crudos al frontend para la tabla
-        res.status(200).json(items);
-    } catch (error) {
-        res.status(500).json({ message: 'Error al generar reporte de inventario.' });
+      }
+
+      const workbook = xlsx.utils.book_new();
+      xlsx.utils.book_append_sheet(workbook, worksheet, "Inventario Completo");
+      const buffer = xlsx.write(workbook, { type: "buffer", bookType: "xlsx" });
+      res.header(
+        "Content-Disposition",
+        'attachment; filename="Reporte_Inventario_Completo.xlsx"'
+      );
+      return res.send(buffer);
     }
+    res.status(200).json(items);
+  } catch (error) {
+    console.error("Error al generar reporte de inventario:", error);
+    res
+      .status(500)
+      .json({ message: "Error al generar reporte de inventario." });
+  }
 };
 
+/**
+ * @controller getReporteMovimientos
+ * @description Genera un reporte de movimientos filtrado.
+ */
 exports.getReporteMovimientos = async (req, res) => {
+    console.log('🕵️‍♂️ [ESPÍA #4 - Controlador]: Entrando a getReporteMovimientos.');
     try {
-        const { fechaDesde, fechaHasta, tipoMovimiento, parteId } = req.query;
+        const { fechaDesde, fechaHasta, tipoMovimiento, parteId, proveedorId } = req.query;
+        
         if (!fechaDesde || !fechaHasta) {
+            console.error('🕵️‍♂️ [ESPÍA #4 - Controlador]: ¡ERROR! Faltan las fechas obligatorias.');
             return res.status(400).json({ message: 'El rango de fechas es obligatorio.' });
         }
-        const whereClause = {
+
+        const whereClauseMovimiento = {
             fecha_movimiento: {
-                [Op.between]: [new Date(fechaDesde), new Date(fechaHasta)]
+                [Op.between]: [new Date(fechaDesde), new Date(`${fechaHasta}T23:59:59.999Z`)] // Asegura incluir todo el día "hasta"
             }
         };
-        if (tipoMovimiento) whereClause.tipo_movimiento = tipoMovimiento;
-        if (parteId) whereClause.parte_repuesto_id = parteId;
+        if (tipoMovimiento) whereClauseMovimiento.tipo_movimiento = tipoMovimiento;
+        if (parteId) whereClauseMovimiento.parte_repuesto_id = parteId;
+        
+        const includeClauseParte = {
+            model: ParteRepuesto,
+            as: 'parteRepuesto',
+            attributes: ['nombre', 'numero_parte'],
+            where: {}
+        };
+
+        if (proveedorId) {
+            includeClauseParte.where.proveedor_id = proveedorId;
+        }
+        
+        console.log('🕵️‍♂️ [ESPÍA #4 - Controlador]: Cláusula de consulta final:', JSON.stringify({ where: whereClauseMovimiento, include: includeClauseParte }, null, 2));
 
         const items = await MovimientoInventario.findAll({
-            where: whereClause,
-            include: [{
-                model: ParteRepuesto,
-                as: 'parteRepuesto',
-                attributes: ['nombre', 'numero_parte']
-            }],
+            where: whereClauseMovimiento,
+            include: [ includeClauseParte, { model: Usuario, as: 'usuario', attributes: ['nombre_usuario'] } ],
             order: [['fecha_movimiento', 'DESC']],
         });
+        
+        console.log(`🕵️‍♂️ [ESPÍA #4 - Controlador]: La consulta a la base de datos encontró ${items.length} resultados.`);
 
-        // Formateamos los datos para que sean limpios
         const formattedItems = items.map(mov => ({
             "Fecha de Movimiento": mov.fecha_movimiento,
             "Concepto": mov.descripcion_movimiento || mov.tipo_movimiento,
-            "Nombre": mov.parteRepuesto.nombre,
-            "N/P": mov.parteRepuesto.numero_parte,
-            "Cantidad": mov.cantidad_movimiento
+            "Nombre": mov.parteRepuesto?.nombre || 'N/A',
+            "N/P": mov.parteRepuesto?.numero_parte || 'N/A',
+            "Cantidad": mov.cantidad_movimiento,
+            "Usuario": mov.usuario?.nombre_usuario || 'N/A'
         }));
 
         if (req.query.export === 'excel') {
@@ -230,11 +271,12 @@ exports.getReporteMovimientos = async (req, res) => {
             const workbook = xlsx.utils.book_new();
             xlsx.utils.book_append_sheet(workbook, worksheet, 'Movimientos');
             const buffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
-            res.header('Content-Disposition', `attachment; filename="Reporte_Movimientos_${fechaDesde}_a_${fechaHasta}.xlsx"`);
+            res.header('Content-Disposition', `attachment; filename="Reporte_Movimientos.xlsx"`);
             return res.send(buffer);
         }
         res.status(200).json(formattedItems);
     } catch (error) {
+        console.error("🕵️‍♂️ [ESPÍA #4 - Controlador]: ¡ERROR FATAL! Error al generar reporte de movimientos:", error);
         res.status(500).json({ message: 'Error al generar reporte de movimientos.' });
     }
 };

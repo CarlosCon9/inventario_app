@@ -36,10 +36,15 @@ export default {
     },
     
     getReporteMovimientos(filters, exportExcel = false) {
+        console.log('🕵️‍♂️ [ESPÍA #2 - Servicio]: Enviando petición a la API con los filtros:', filters);
+        const config = { params: { ...filters } };
         if (exportExcel) {
-            return apiClient.get('/reportes/movimientos', { params: { ...filters, export: 'excel' }, responseType: 'blob' })
+            config.params.export = 'excel';
+            config.responseType = 'blob';
+            return apiClient.get('/reportes/movimientos', config)
                 .then(response => downloadFile(response, 'Reporte_Movimientos.xlsx'));
         }
-        return apiClient.get('/reportes/movimientos', { params: filters });
+        return apiClient.get('/reportes/movimientos', config);
     }
+
 };
