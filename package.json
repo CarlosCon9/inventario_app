@@ -21,7 +21,8 @@
     "roboto-fontface": "*",
     "sequelize": "^6.37.7",
     "vuetify": "^3.0.0-beta.0",
-    "webfontloader": "^1.0.0"
+    "webfontloader": "^1.0.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "vue-cli-plugin-vuetify": "~2.5.8",

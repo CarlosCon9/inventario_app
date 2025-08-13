@@ -60,7 +60,7 @@ const menuItems = ref([
   { title: 'Partes y Repuestos', icon: 'mdi-cogs', to: '/partes' },
   { title: 'Movimientos', icon: 'mdi-swap-horizontal', to: '/movimientos' },
   { title: 'Gestión de Usuarios', icon: 'mdi-account-group', to: '/admin/usuarios', rol: 'administrador' },
-  { title: 'Log de Actividad', icon: 'mdi-clipboard-text-clock', to: '/admin/logs', rol: 'administrador' },
+  { title: 'Reportes', icon: 'mdi-chart-line', to: '/admin/reportes', rol: 'administrador' },
   ]);
 
 const logout = () => {
