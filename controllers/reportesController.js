@@ -219,12 +219,12 @@ exports.getReporteInventarioCompleto = async (req, res) => {
  * @description Genera un reporte de movimientos filtrado.
  */
 exports.getReporteMovimientos = async (req, res) => {
-    console.log('🕵️‍♂️ [ESPÍA #4 - Controlador]: Entrando a getReporteMovimientos.');
+   
     try {
         const { fechaDesde, fechaHasta, tipoMovimiento, parteId, proveedorId } = req.query;
         
         if (!fechaDesde || !fechaHasta) {
-            console.error('🕵️‍♂️ [ESPÍA #4 - Controlador]: ¡ERROR! Faltan las fechas obligatorias.');
+            
             return res.status(400).json({ message: 'El rango de fechas es obligatorio.' });
         }
 
@@ -247,15 +247,14 @@ exports.getReporteMovimientos = async (req, res) => {
             includeClauseParte.where.proveedor_id = proveedorId;
         }
         
-        console.log('🕵️‍♂️ [ESPÍA #4 - Controlador]: Cláusula de consulta final:', JSON.stringify({ where: whereClauseMovimiento, include: includeClauseParte }, null, 2));
-
+       
         const items = await MovimientoInventario.findAll({
             where: whereClauseMovimiento,
             include: [ includeClauseParte, { model: Usuario, as: 'usuario', attributes: ['nombre_usuario'] } ],
             order: [['fecha_movimiento', 'DESC']],
         });
         
-        console.log(`🕵️‍♂️ [ESPÍA #4 - Controlador]: La consulta a la base de datos encontró ${items.length} resultados.`);
+
 
         const formattedItems = items.map(mov => ({
             "Fecha de Movimiento": mov.fecha_movimiento,
@@ -276,7 +275,7 @@ exports.getReporteMovimientos = async (req, res) => {
         }
         res.status(200).json(formattedItems);
     } catch (error) {
-        console.error("🕵️‍♂️ [ESPÍA #4 - Controlador]: ¡ERROR FATAL! Error al generar reporte de movimientos:", error);
+    
         res.status(500).json({ message: 'Error al generar reporte de movimientos.' });
     }
 };

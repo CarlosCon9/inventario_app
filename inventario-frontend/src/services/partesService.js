@@ -38,7 +38,6 @@ export default {
         return apiClient.get('/proveedores/todos');
     },
 searchPartes(query) {
-        console.log(`🕵️‍♂️ [ESPÍA #2 - Frontend]: El Servicio searchPartes está enviando la petición a la API con la consulta: "${query}"`);
         return apiClient.get('/partes-repuestos/search', { params: { query } });
     }
     

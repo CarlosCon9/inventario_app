@@ -233,23 +233,13 @@ const cargarDatosIniciales = async () => {
 };
 
 const cargarReporteMovimientos = async () => {
-  console.log(
-    '🕵️‍♂️ [ESPÍA #1 - Vista]: Se hizo clic en "Generar Reporte". Filtros actuales:',
-    filters.value
-  );
+
   loading.movimientos = true;
   try {
     const response = await reportesService.getReporteMovimientos(filters.value);
-    console.log(
-      "🕵️‍♂️ [ESPÍA #1 - Vista]: Respuesta de la API recibida:",
-      response.data
-    );
     data.movimientos = response.data;
   } catch (e) {
-    console.error(
-      "🕵️‍♂️ [ESPÍA #1 - Vista]: ¡ERROR al cargar reporte de movimientos!:",
-      e
-    );
+    
   } finally {
     loading.movimientos = false;
   }

@@ -36,7 +36,7 @@ export default {
     },
     
     getReporteMovimientos(filters, exportExcel = false) {
-        console.log('🕵️‍♂️ [ESPÍA #2 - Servicio]: Enviando petición a la API con los filtros:', filters);
+        
         const config = { params: { ...filters } };
         if (exportExcel) {
             config.params.export = 'excel';

@@ -83,7 +83,7 @@ let searchTimeout = null;
 
 
 const buscarPartes = (query) => {
-  console.log(`🕵️‍♂️ [ESPÍA #1 - Frontend]: El usuario está escribiendo en el Autocomplete. Texto: "${query}"`);
+
   
   if (!query || query.length < 2) {
     partesEncontradas.value = [];
@@ -96,10 +96,10 @@ const buscarPartes = (query) => {
   searchTimeout = setTimeout(async () => {
     try {
       const response = await partesService.searchPartes(query);
-      console.log('🕵️‍♂️ [ESPÍA #1 - Frontend]: Respuesta recibida de la API ->', response.data);
+    
       partesEncontradas.value = response.data;
     } catch (error) {
-      console.error("🕵️‍♂️ [ESPÍA #1 - Frontend]: ¡ERROR! Error buscando partes:", error);
+   
       showSnackbar("Error al buscar partes.", "error");
     } finally {
       isSearching.value = false;

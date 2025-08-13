@@ -15,9 +15,8 @@ router.get('/movimientos-recientes', authorizeRoles('administrador', 'operador')
 router.get('/stock-bajo-detallado', authorizeRoles('administrador', 'operador'), reportesController.getReporteStockBajoDetallado);
 router.get('/inventario-completo', authorizeRoles('administrador', 'operador'), reportesController.getReporteInventarioCompleto);
 
-// --- Ruta con espía ---
+
 router.get('/movimientos', authorizeRoles('administrador', 'operador'), (req, res, next) => {
-    console.log(`🕵️‍♂️ [ESPÍA #3 - Rutas]: Petición recibida en /api/reportes/movimientos con los filtros:`, req.query);
     next();
 }, reportesController.getReporteMovimientos);
 
