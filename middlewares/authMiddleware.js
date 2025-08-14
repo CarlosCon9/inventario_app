@@ -1,3 +1,4 @@
+//Agosto 14 de 2025
 // middlewares/authMiddleware.js
 const jwt = require('jsonwebtoken');
 const { Usuario } = require('../models');

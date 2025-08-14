@@ -1,3 +1,4 @@
+//Agosto 14 de 2025
 /**
  * routes/proveedorRoutes.js
  * Este archivo define los endpoints (rutas) para todo lo relacionado con los proveedores.

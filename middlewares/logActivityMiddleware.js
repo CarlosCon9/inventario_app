@@ -1,3 +1,4 @@
+//Agosto 14 de 2025
 // middlewares/logActivityMiddleware.js
 const { RegistroActividad } = require('../models'); // Importa el modelo RegistroActividad
 

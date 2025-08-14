@@ -1,3 +1,4 @@
+//Agosto 14 de 2025
 // models/usuario.js
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto"); // Importamos el módulo crypto de Node.js

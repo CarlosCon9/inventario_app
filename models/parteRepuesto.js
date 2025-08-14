@@ -1,3 +1,4 @@
+//Agosto 14 de 2025
 // models/parteRepuesto.js
 module.exports = (sequelize, DataTypes) => {
   const ParteRepuesto = sequelize.define(

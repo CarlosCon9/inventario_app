@@ -1,6 +1,7 @@
 // src/store/authStore.js
 import { defineStore } from 'pinia';
 import authService from '@/services/authService';
+import router from '@/router';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -9,31 +10,31 @@ export const useAuthStore = defineStore('auth', {
   }),
   getters: {
     isAuthenticated: (state) => !!state.token,
-    userRole: (state) => (state.user ? state.user.rol : null),
+    userRole: (state) => state.user?.rol,
   },
   actions: {
     async login(credentials) {
       try {
         const response = await authService.login(credentials);
-        const { token, user } = response.data;
-        this.token = token;
-        this.user = user;
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(user));
+        this.loginWithToken(response.data.token, response.data.user);
         return true;
       } catch (error) {
         this.logout(false);
         throw error;
       }
     },
-    logout(redirect = true) {
+    loginWithToken(token, user) {
+      this.token = token;
+      this.user = user;
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+    },
+    logout() {
       this.token = null;
       this.user = null;
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      if (redirect) {
-        window.location.href = '/login';
-      }
+      router.push('/login');
     },
   },
 });

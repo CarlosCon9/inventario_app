@@ -1,3 +1,4 @@
+//Agosto 14 de 2025
 // models/proveedor.js
 module.exports = (sequelize, DataTypes) => { // <-- ¡IMPORTANTE! Envuelve la definición en una función
     const Proveedor = sequelize.define('Proveedor', {

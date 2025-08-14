@@ -1,3 +1,4 @@
+//Agosto 14 de 2025
 // controllers/userController.js
 const { Op } = require('sequelize');
 const { Usuario } = require('../models');

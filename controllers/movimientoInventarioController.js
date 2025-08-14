@@ -1,3 +1,4 @@
+//Agosto 14 de 2025
 // controllers/movimientoInventarioController.js
 const { MovimientoInventario, ParteRepuesto, sequelize } = require('../models');
 

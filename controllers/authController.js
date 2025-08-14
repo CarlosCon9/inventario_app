@@ -1,3 +1,4 @@
+//Agosto 14 de 2025
 // controllers/authController.js
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
@@ -13,7 +14,29 @@ const generateToken = (user, sessionId) => {
     );
 };
 
-exports.register = async (req, res) => { /* Tu código funcional */ };
+exports.register = async (req, res) => {
+    // Tu código de registro existente va aquí...
+    const { nombre_usuario, correo_electronico, contrasena, rol } = req.body;
+    const transaction = await sequelize.transaction();
+    try {
+        const existingUser = await Usuario.findOne({
+            where: { [Sequelize.Op.or]: [{ nombre_usuario }, { correo_electronico }] },
+            transaction
+        });
+        if (existingUser) {
+            await transaction.rollback();
+            return res.status(409).json({ message: 'El nombre de usuario o el correo electrónico ya están en uso.' });
+        }
+        const newUser = await Usuario.create({ nombre_usuario, correo_electronico, contrasena, rol }, { transaction });
+        await transaction.commit();
+        await req.logActivity('registro_usuario', 'Usuario', newUser.id, { correo_electronico }, 'EXITO');
+        res.status(201).json({ message: 'Usuario registrado exitosamente.' });
+    } catch (error) {
+        await transaction.rollback();
+        console.error('Error en el registro:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+};
 
 exports.login = async (req, res) => {
     const { correo_electronico, contrasena } = req.body;

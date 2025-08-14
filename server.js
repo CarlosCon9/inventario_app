@@ -1,3 +1,4 @@
+//Agosto 14 de 2025
 // server.js
 require('dotenv').config(); // Carga las variables de entorno desde .env
 

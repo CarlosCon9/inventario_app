@@ -1,3 +1,4 @@
+//Agosto 14 de 2025
 // controllers/reportesController.js
 const { Op, Sequelize } = require("sequelize");
 const { ParteRepuesto, Proveedor, MovimientoInventario, Usuario } = require("../models");

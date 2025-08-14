@@ -1,3 +1,4 @@
+//Agosto 14 de 2025
 // models/registroActividad.js
 module.exports = (sequelize, DataTypes) => { // <-- ¡IMPORTANTE! Envuelve la definición en una función
     const RegistroActividad = sequelize.define('RegistroActividad', {

@@ -1,3 +1,4 @@
+//Agosto 14 de 2025
 /**
  * controllers/proveedorController.js
  * Este archivo contiene toda la lógica de negocio para manejar las operaciones

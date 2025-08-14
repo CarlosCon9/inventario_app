@@ -1,3 +1,4 @@
+//Agosto 14 de 2025
 // models/movimientoInventario.js
 module.exports = (sequelize, DataTypes) => {
     const MovimientoInventario = sequelize.define('MovimientoInventario', {

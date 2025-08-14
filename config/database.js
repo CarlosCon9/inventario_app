@@ -1,3 +1,4 @@
+//Agosto 14 de 2025
 // config/database.js
 require('dotenv').config(); // Asegúrate de que esto esté al principio para cargar .env
 

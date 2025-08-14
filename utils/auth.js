@@ -1,3 +1,4 @@
+//Agosto 14 de 2025
 // Carga las variables de entorno para acceder a JWT_SECRET
 require('dotenv').config();
 // Importa la librería bcryptjs para hashear y comparar contraseñas
