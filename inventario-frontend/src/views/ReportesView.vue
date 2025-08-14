@@ -5,13 +5,16 @@
         <v-icon start>mdi-chart-line</v-icon>
         Módulo de Reportes
       </v-card-title>
+
       <v-tabs v-model="tab" color="primary">
         <v-tab value="stockBajo">Stock Bajo</v-tab>
         <v-tab value="inventario">Inventario Completo</v-tab>
         <v-tab value="movimientos">Historial de Movimientos</v-tab>
       </v-tabs>
+
       <v-card-text>
         <v-window v-model="tab">
+          <!-- Stock Bajo -->
           <v-window-item value="stockBajo">
             <v-btn
               color="success"
@@ -29,6 +32,7 @@
             ></v-data-table>
           </v-window-item>
 
+          <!-- Inventario Completo -->
           <v-window-item value="inventario">
             <v-btn
               color="success"
@@ -56,21 +60,22 @@
             </v-data-table>
           </v-window-item>
 
+          <!-- Movimientos -->
           <v-window-item value="movimientos">
             <v-row class="mb-2" align="center">
-              <v-col cols="12" sm="6" md="2"
-                ><v-text-field
+              <v-col cols="12" sm="6" md="2">
+                <v-text-field
                   v-model="filters.fechaDesde"
                   label="Desde"
                   type="date"
                   variant="outlined"
                   density="compact"
                   hide-details
-                ></v-text-field
-              ></v-col>
+                ></v-text-field>
+              </v-col>
 
-              <v-col cols="12" sm="6" md="2"
-                ><v-text-field
+              <v-col cols="12" sm="6" md="2">
+                <v-text-field
                   v-model="filters.fechaHasta"
                   label="Hasta"
                   type="date"
@@ -78,34 +83,45 @@
                   variant="outlined"
                   density="compact"
                   hide-details
-                ></v-text-field
-              ></v-col>
-              <v-col cols="12" sm="2"
-                ><v-select
+                ></v-text-field>
+              </v-col>
+
+              <v-col cols="12" sm="2">
+                <v-select
                   v-model="filters.tipoMovimiento"
                   :items="['entrada', 'salida']"
                   label="Movimiento"
                   clearable
-                ></v-select
-              ></v-col>
-              <v-col cols="12" sm="4"
-                ><v-autocomplete
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                ></v-select>
+              </v-col>
+
+              <v-col cols="12" sm="6" md="3">
+                <v-autocomplete
                   v-model="filters.parteId"
                   :items="partes"
                   item-title="nombre"
                   item-value="id"
                   label="Filtrar por Parte"
                   clearable
+                  variant="outlined"
+                  density="compact"
+                  hide-details
                   @update:search="buscarPartes"
-                ></v-autocomplete
-              ></v-col>
+                ></v-autocomplete>
+              </v-col>
             </v-row>
+
             <v-btn
               color="primary"
               @click="cargarReporteMovimientos"
               :loading="loading.movimientos"
-              >Generar Reporte</v-btn
             >
+              Generar Reporte
+            </v-btn>
+
             <v-btn
               color="success"
               @click="exportar('movimientos')"
@@ -115,18 +131,27 @@
               <v-icon start>mdi-file-excel</v-icon>
               Exportar
             </v-btn>
+
             <v-data-table
               :headers="headers.movimientos"
               :items="data.movimientos"
               :loading="loading.movimientos"
               class="mt-4"
-            ></v-data-table>
+            >
+              <template #item.fecha="{ item }">
+                {{ formatDate(item.fecha) }}
+              </template>
+              <template #item.hora="{ item }">
+                {{ formatTime(item.hora) }}
+              </template>
+            </v-data-table>
           </v-window-item>
         </v-window>
       </v-card-text>
     </v-card>
   </v-container>
 </template>
+
 <script setup>
 import { ref, reactive, onMounted, computed } from "vue";
 import reportesService from "@/services/reportesService";
@@ -140,8 +165,8 @@ const loading = reactive({
   movimientos: false,
 });
 const filters = ref({
-  fechaDesde: new Date().toISOString().split("T")[0], // Valor por defecto: hoy
-  fechaHasta: new Date().toISOString().split("T")[0], // Valor por defecto: hoy
+  fechaDesde: new Date().toISOString().split("T")[0],
+  fechaHasta: new Date().toISOString().split("T")[0],
   tipoMovimiento: null,
   parteId: null,
   proveedorId: null,
@@ -164,17 +189,18 @@ const headers = {
     { title: "Precio Referencia", key: "precio_referencia", align: "end" },
   ],
   movimientos: [
-    { title: "Fecha", key: "Fecha de Movimiento" },
-    { title: "Concepto", key: "Concepto" },
-    { title: "Nombre", key: "Nombre" },
-    { title: "N/P", key: "N/P" },
-    { title: "Cantidad", key: "Cantidad", align: "end" },
-    { title: "Usuario", key: "Usuario" },
+    { title: "Fecha", key: "fecha" },
+    { title: "Hora", key: "hora" },
+    { title: "Concepto", key: "concepto" },
+    { title: "Nombre", key: "nombre" },
+    { title: "N/P", key: "np" },
+    { title: "Cantidad", key: "cantidad_movimiento" },
+    { title: "Usuario", key: "usuario" },
   ],
 };
 
 const today = computed(() => {
-  return new Date().toISOString().split('T')[0];
+  return new Date().toISOString().split("T")[0];
 });
 
 const formatCurrency = (value) => {
@@ -187,31 +213,29 @@ const formatCurrency = (value) => {
   }).format(value);
 };
 
-const formatDateTime = (dateString) => {
+const formatDate = (dateString) => {
   if (!dateString) return "N/A";
   const date = new Date(dateString);
-  const options = {
+  return new Intl.DateTimeFormat("es-CO", {
+    timeZone: "America/Bogota",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
+  })
+    .format(date)
+    .replace(/\//g, "-");
+};
+
+const formatTime = (dateString) => {
+  if (!dateString) return "N/A";
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat("es-CO", {
+    timeZone: "America/Bogota",
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
-    timeZone: "America/Bogota", // Aseguramos la zona horaria de Colombia
-    hour12: false,
-  };
-
-  
-  const partes = new Intl.DateTimeFormat('en-US', options).formatToParts(date);
-  const find = (type) => parts.find(p => p.type === type)?.value;
-  const y = find('year');
-  const m = find('month');
-  const d = find('day');
-  const hh = find('hour');
-  const mm = find('minute');
-  const ss = find('second');
-  return `${d}-${m}-${y} ${hh}:${mm}:${ss}`;
- 
+    hour12: true,
+  }).format(date);
 };
 
 const cargarDatosIniciales = async () => {
@@ -233,13 +257,22 @@ const cargarDatosIniciales = async () => {
 };
 
 const cargarReporteMovimientos = async () => {
-
   loading.movimientos = true;
   try {
     const response = await reportesService.getReporteMovimientos(filters.value);
-    data.movimientos = response.data;
+
+    // Transformamos los datos para que coincidan con los headers
+    data.movimientos = response.data.map((mov) => ({
+      fecha: mov.fecha_movimiento,
+      hora: mov.fecha_movimiento,
+      concepto: mov.descripcion_movimiento || mov.tipo_movimiento,
+      nombre: mov.parteRepuesto?.nombre || "N/A",
+      np: mov.parteRepuesto?.numero_parte || "N/A",
+      cantidad_movimiento: mov.cantidad_movimiento,
+      usuario: mov.usuario?.nombre_usuario || "N/A",
+    }));
   } catch (e) {
-    
+    console.error(e);
   } finally {
     loading.movimientos = false;
   }

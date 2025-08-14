@@ -219,18 +219,15 @@ exports.getReporteInventarioCompleto = async (req, res) => {
  * @description Genera un reporte de movimientos filtrado.
  */
 exports.getReporteMovimientos = async (req, res) => {
-   
     try {
         const { fechaDesde, fechaHasta, tipoMovimiento, parteId, proveedorId } = req.query;
-        
         if (!fechaDesde || !fechaHasta) {
-            
             return res.status(400).json({ message: 'El rango de fechas es obligatorio.' });
         }
-
+        
         const whereClauseMovimiento = {
             fecha_movimiento: {
-                [Op.between]: [new Date(fechaDesde), new Date(`${fechaHasta}T23:59:59.999Z`)] // Asegura incluir todo el día "hasta"
+                [Op.between]: [new Date(fechaDesde), new Date(`${fechaHasta}T23:59:59.999Z`)]
             }
         };
         if (tipoMovimiento) whereClauseMovimiento.tipo_movimiento = tipoMovimiento;
@@ -246,36 +243,41 @@ exports.getReporteMovimientos = async (req, res) => {
         if (proveedorId) {
             includeClauseParte.where.proveedor_id = proveedorId;
         }
-        
-       
+
         const items = await MovimientoInventario.findAll({
             where: whereClauseMovimiento,
             include: [ includeClauseParte, { model: Usuario, as: 'usuario', attributes: ['nombre_usuario'] } ],
             order: [['fecha_movimiento', 'DESC']],
         });
-        
 
-
-        const formattedItems = items.map(mov => ({
-            "Fecha de Movimiento": mov.fecha_movimiento,
-            "Concepto": mov.descripcion_movimiento || mov.tipo_movimiento,
-            "Nombre": mov.parteRepuesto?.nombre || 'N/A',
-            "N/P": mov.parteRepuesto?.numero_parte || 'N/A',
-            "Cantidad": mov.cantidad_movimiento,
-            "Usuario": mov.usuario?.nombre_usuario || 'N/A'
-        }));
-
-        if (req.query.export === 'excel') {
-            const worksheet = xlsx.utils.json_to_sheet(formattedItems);
-            const workbook = xlsx.utils.book_new();
-            xlsx.utils.book_append_sheet(workbook, worksheet, 'Movimientos');
-            const buffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
-            res.header('Content-Disposition', `attachment; filename="Reporte_Movimientos.xlsx"`);
-            return res.send(buffer);
+        // Para la respuesta JSON al frontend, enviamos el objeto completo
+        if (req.query.export !== 'excel') {
+            return res.status(200).json(items);
         }
-        res.status(200).json(formattedItems);
+
+        // --- LÓGICA DE EXPORTACIÓN A EXCEL CON FECHA Y HORA SEPARADAS ---
+        const formattedForExcel = items.map(mov => {
+            const localDate = new Date(mov.fecha_movimiento);
+            return {
+                "Fecha": localDate.toLocaleDateString('es-CO', { timeZone: 'America/Bogota' }),
+                "Hora": localDate.toLocaleTimeString('es-CO', { timeZone: 'America/Bogota', hour12: true }),
+                "Concepto": mov.descripcion_movimiento || mov.tipo_movimiento,
+                "Nombre": mov.parteRepuesto?.nombre || 'N/A',
+                "N/P": mov.parteRepuesto?.numero_parte || 'N/A',
+                "Cantidad": mov.cantidad_movimiento,
+                "Usuario": mov.usuario?.nombre_usuario || 'N/A'
+            };
+        });
+        
+        const worksheet = xlsx.utils.json_to_sheet(formattedForExcel);
+        const workbook = xlsx.utils.book_new();
+        xlsx.utils.book_append_sheet(workbook, worksheet, 'Movimientos');
+        const buffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+        res.header('Content-Disposition', `attachment; filename="Reporte_Movimientos.xlsx"`);
+        return res.send(buffer);
+
     } catch (error) {
-    
+        console.error("Error al generar reporte de movimientos:", error);
         res.status(500).json({ message: 'Error al generar reporte de movimientos.' });
     }
 };
