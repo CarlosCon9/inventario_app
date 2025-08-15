@@ -4,6 +4,15 @@ const { Op, Sequelize } = require("sequelize");
 const { ParteRepuesto, Proveedor, MovimientoInventario, Usuario } = require("../models");
 const xlsx = require("xlsx");
 
+// --- Función para generar timestamp ---
+const getTimestamp = () => {
+  const now = new Date();
+  const pad = (num) => num.toString().padStart(2, "0");
+  const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  const time = `${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+  return `${date}_${time}`;
+};
+
 exports.getDashboardStats = async (req, res) => {
   try {
     const [
@@ -88,7 +97,7 @@ exports.getMovimientosRecientes = async (req, res) => {
       include: [
         {
           model: ParteRepuesto,
-          as: "parteRepuesto", // Cambiado de 'parte_repuesto'
+          as: "parteRepuesto",
           attributes: ["nombre"],
         },
         {
@@ -107,10 +116,6 @@ exports.getMovimientosRecientes = async (req, res) => {
 
 // --- NUEVAS FUNCIONES PARA EL MÓDULO DE REPORTES ---
 
-/**
- * @controller getReporteStockBajo
- * @description Genera un reporte de partes con stock bajo o igual al mínimo.
- */
 exports.getReporteStockBajoDetallado = async (req, res) => {
   try {
     const items = await ParteRepuesto.findAll({
@@ -136,7 +141,7 @@ exports.getReporteStockBajoDetallado = async (req, res) => {
       const buffer = xlsx.write(workbook, { type: "buffer", bookType: "xlsx" });
       res.header(
         "Content-Disposition",
-        'attachment; filename="Reporte_Stock_Bajo.xlsx"'
+        `attachment; filename="Reporte_Stock_Bajo_${getTimestamp()}.xlsx"`
       );
       return res.send(buffer);
     }
@@ -163,36 +168,19 @@ exports.getReporteInventarioCompleto = async (req, res) => {
             order: [['nombre', 'ASC']],
             raw: true
         });
-        
-        // Formateamos para el Excel con los nombres correctos
-        const formattedItemsForExcel = items.map(item => ({
-            'Nombre': item.nombre,
-            'N/P': item.numero_parte,
-            'Cantidad de Stock': item.cantidad,
-            'Precio de Compra': item.precio_compra,
-            'Precio de Venta': item.precio_venta_sugerido,
-            'Precio de Referencia': item.precio_referencia
-        }));
-
 
     if (req.query.export === "excel") {
       const worksheet = xlsx.utils.json_to_sheet(items);
 
-      // --- LÓGICA PARA APLICAR FORMATO DE MONEDA ---
       const range = xlsx.utils.decode_range(worksheet["!ref"]);
       for (let R = range.s.r + 1; R <= range.e.r; ++R) {
-        // Itera sobre las filas, saltando la cabecera
         for (let C = range.s.c; C <= range.e.c; ++C) {
-          // Itera sobre las columnas
           const cell_address = { c: C, r: R };
           const cell_ref = xlsx.utils.encode_cell(cell_address);
           const cell = worksheet[cell_ref];
-
-          // Si la celda corresponde a una de las columnas de precio y es un número...
           if (cell && cell.t === "n" && (C === 3 || C === 4 || C === 5)) {
-            // Columnas D, E, F
-            cell.t = "n"; // Asegura que el tipo sea numérico
-            cell.z = "$ #,##0"; // Formato de moneda sin decimales
+            cell.t = "n";
+            cell.z = "$ #,##0";
           }
         }
       }
@@ -202,7 +190,7 @@ exports.getReporteInventarioCompleto = async (req, res) => {
       const buffer = xlsx.write(workbook, { type: "buffer", bookType: "xlsx" });
       res.header(
         "Content-Disposition",
-        'attachment; filename="Reporte_Inventario_Completo.xlsx"'
+        `attachment; filename="Reporte_Inventario_Completo_${getTimestamp()}.xlsx"`
       );
       return res.send(buffer);
     }
@@ -215,10 +203,6 @@ exports.getReporteInventarioCompleto = async (req, res) => {
   }
 };
 
-/**
- * @controller getReporteMovimientos
- * @description Genera un reporte de movimientos filtrado.
- */
 exports.getReporteMovimientos = async (req, res) => {
     try {
         const { fechaDesde, fechaHasta, tipoMovimiento, parteId, proveedorId } = req.query;
@@ -251,12 +235,10 @@ exports.getReporteMovimientos = async (req, res) => {
             order: [['fecha_movimiento', 'DESC']],
         });
 
-        // Para la respuesta JSON al frontend, enviamos el objeto completo
         if (req.query.export !== 'excel') {
             return res.status(200).json(items);
         }
 
-        // --- LÓGICA DE EXPORTACIÓN A EXCEL CON FECHA Y HORA SEPARADAS ---
         const formattedForExcel = items.map(mov => {
             const localDate = new Date(mov.fecha_movimiento);
             return {
@@ -274,7 +256,10 @@ exports.getReporteMovimientos = async (req, res) => {
         const workbook = xlsx.utils.book_new();
         xlsx.utils.book_append_sheet(workbook, worksheet, 'Movimientos');
         const buffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
-        res.header('Content-Disposition', `attachment; filename="Reporte_Movimientos.xlsx"`);
+        res.header(
+          "Content-Disposition",
+          `attachment; filename="Reporte_Movimientos_${getTimestamp()}.xlsx"`
+        );
         return res.send(buffer);
 
     } catch (error) {

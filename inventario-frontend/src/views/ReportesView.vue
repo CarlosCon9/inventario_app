@@ -129,7 +129,7 @@
               class="ml-2"
             >
               <v-icon start>mdi-file-excel</v-icon>
-              Exportar
+              Exportar a Excel
             </v-btn>
 
             <v-data-table
