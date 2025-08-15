@@ -40,7 +40,7 @@
           </v-tooltip>
           <v-tooltip text="Desactivar Usuario">
             <template v-slot:activator="{ props }">
-              <v-icon v-bind="props" size="small" @click.stop="openDeleteItemDialog(item)">mdi-delete</v-icon>
+              <v-icon v-bind="props" size="small" @click.stop="openDeleteItemDialog(item)">mdi-account-off</v-icon>
             </template>
           </v-tooltip>
         </template>
