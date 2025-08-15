@@ -5,14 +5,33 @@ const { ParteRepuesto, Proveedor, MovimientoInventario, sequelize } = require('.
 const fs = require('fs');
 const path = require('path');
 
+
 const saveFile = (fileBuffer, parteId, originalName, subfolder) => {
+    const filePath = path.join(`uploads/${subfolder}/`, originalName);
+    fs.writeFileSync(filePath, fileBuffer);
+    return filePath.replace(/\\/g, "/");
+};
+
+
+/* const saveFile = (fileBuffer, parteId, originalName, subfolder) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const prefix = subfolder === 'partes-manuales' ? 'manual' : 'parte';
     const filename = `${prefix}-${parteId}-${uniqueSuffix}${path.extname(originalName)}`;
     const filePath = path.join(`uploads/${subfolder}/`, filename);
     fs.writeFileSync(filePath, fileBuffer);
     return filePath.replace(/\\/g, "/");
-};
+}; */
+ 
+
+/* const saveFile = (fileBuffer, originalName, subfolder) => {
+    const filename = originalName;
+    const directory = path.join('uploads', subfolder);
+    fs.mkdirSync(directory, { recursive: true }); // Asegura que la carpeta exista
+    const filePath = path.join(directory, filename);
+    fs.writeFileSync(filePath, fileBuffer);
+    return filePath.replace(/\\/g, "/");
+}; */
+
 
 const calcularPrecioVentaSugerido = (precioCompra, porcentajeGanancia) => {
     const precio = parseFloat(precioCompra);
