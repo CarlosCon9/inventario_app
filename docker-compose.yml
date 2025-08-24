@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  database:
+    image: postgres:15-alpine
+    container_name: inventario_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    container_name: inventario_backend
+    build:
+      context: ./inventario_app # Ruta a la carpeta del backend
+    restart: unless-stopped
+    env_file:
+      - ./inventario_app/.env # Carga las variables de entorno
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./inventario_app/uploads:/usr/src/app/uploads # Mapea la carpeta de subidas
+      - /usr/src/app/node_modules # No mapear node_modules
+    depends_on:
+      - database
+
+  frontend:
+    container_name: inventario_frontend
+    build:
+      context: ./inventario-frontend # Ruta a la carpeta del frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
