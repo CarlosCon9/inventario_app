@@ -2,7 +2,7 @@
   <v-row no-gutters class="fill-height">
     <v-col md="7" class="bg-blue d-none d-md-flex align-center justify-center">
       <div class="text-center">
-        <v-img src="@/assets/logo1.jpg" max-height="500" contain class="mb-8"></v-img>
+        <v-img src="@/assets/logo1.png" max-height="500" contain class="mb-8"></v-img>
         <h1 class="text-h4 font-weight-bold text-white mb-4">
           Bienvenido a Inventario App <br>by Contreras Solutions
         </h1>
